@@ -1,0 +1,18 @@
+# list of ignored files/folders
+
+build/
+*~
+*.o
+*.obj
+*.bak
+*.vtk
+*.out
+*.exe
+*.txt
+*.dat
+*.asv
+*.eps
+*h.gch
+test.*
+.DS_Store
+!CMakeLists.txt
