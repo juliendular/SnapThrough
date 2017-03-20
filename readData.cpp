@@ -1,7 +1,7 @@
 #include "main.h"
 
 #define N_GEOM 4
-#define N_PARAM 2
+#define N_PARAM 3
 
 int readData(std::string fileName, Truss &truss, Parameters &parameters){
     // Get the file
@@ -10,7 +10,10 @@ int readData(std::string fileName, Truss &truss, Parameters &parameters){
     std::getline(inFile, buf);
     // Check the file type
     std::string fileType = "#PARAMETERS";
-    assert(buf == fileType);
+    if(buf != fileType){
+        std::cout << "Invalid file format. Must start with #PARAMETERS" << std::endl;
+        return 3;
+    }
     // Loop on the file sections
     while(true){
         std::getline(inFile, buf);
@@ -58,10 +61,13 @@ int readData(std::string fileName, Truss &truss, Parameters &parameters){
                     if(1==sscanf(buf.c_str(),"%*[^=]=%s", value)){
                         switch(cnt){ // Parameter filling
                             case 0:
-                            parameters.resolution = atoi(value);
+                            parameters.resolAna = atoi(value);
                             break;
                             case 1:
-                            parameters.tFinal = atof(value);
+                            parameters.xMin = atof(value);
+                            break;
+                            case 2:
+                            parameters.xMax = atof(value);
                             break;
                         }
                         ++cnt;
@@ -76,7 +82,7 @@ int readData(std::string fileName, Truss &truss, Parameters &parameters){
             else if(buf=="END"){return 0;}
             else{
                 std::cout <<"Unknown '"<<buf<<"' identifier."<< "\n";
-                return 1;
+                return 2;
             }
             break;
             default :

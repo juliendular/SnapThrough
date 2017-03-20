@@ -2,14 +2,11 @@
 
 int main(int argc, char *argv[]){
 
-    // Read input data from file
+    // ----- Read input data -----
     Truss truss;
-    Parameters parameters;
+    Parameters param;
     if(argc == 3){
-        if(readData(argv[1], truss, parameters)){
-            std::cout << "Invalid input file" << std::endl;
-            return EXIT_FAILURE;
-        }
+        if(readData(argv[1], truss, param)){return EXIT_FAILURE;}
     }
     else{
         std::cout << "Wrong input arguments. Should be:" << std::endl;
@@ -18,18 +15,20 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }
 
-    // Analytical solution
-    std::cout << "Analytical solution" << std::endl;
+    // ----- Analytical solution -----
+    double qcr = qcrCalc(truss);
+    std::vector <double> xAna;
+    std::vector <double> lambda;
 
-    std::cout << truss.A << " " << truss.l0 << std::endl;
-    std::cout << parameters.resolution << " " << parameters.tFinal << std::endl;
+    double beta = 9.0/(2.0*sqrt(3));
+    analytical(beta, param.xMin, param.xMax, param.resolAna, xAna, lambda);
+
+    // Write the data in a .txt file
+    if(writeData(xAna, lambda, "analytical")){return EXIT_FAILURE;}
+
+    // ----- Incremental solution -----
 
 
-
-
-
-    // Incremental solution
-    std::cout << "Incremental solution" << std::endl;
 
 
     return 0;
