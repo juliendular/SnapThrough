@@ -21,8 +21,3 @@ double residual(double x, double lambda, double beta){
 double qcrCalc(Truss &truss){
     return sqrt(3)*truss.A*truss.E*truss.b*truss.b*truss.b/(9.0*truss.l0*truss.l0*truss.l0);
 }
-/*
-double beta(Truss &truss){
-
-}
-*/
