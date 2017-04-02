@@ -30,15 +30,33 @@ int main(int argc, char *argv[]){
     // Writes the results in a .txt file
     if(writeData(xAna, lambdaAna, "analytical")){return EXIT_FAILURE;}
 
-    // ----- Incremental solution -----
-    double lambdaMaxIncr = 1.0;
-    int resolutionIncr = 5;
+    // ----- Incremental method -----
+    double lambdaMaxIncr = 1.5;
+    int resolutionIncr = 10;
     std::vector<double> xIncr(resolutionIncr);
     std::vector<double> lambdaIncr(resolutionIncr);
     // Performs the incremental method
     incremental(lambdaMaxIncr, resolutionIncr, xIncr, lambdaIncr);
     // Writes the results in a .txt file
     if(writeData(xIncr, lambdaIncr, "incremental")){return EXIT_FAILURE;}
+
+    // ----- Newton-Raphson method -----
+
+    double lambdaMaxNR = 1.5;
+    int resolutionNR = 10;
+    double epsilonNR = 0.05;
+    std::vector<double> xNR(resolutionNR);
+    std::vector<double> lambdaNR(resolutionNR);
+    // Performs the incremental method
+    newtonRaphson(lambdaMaxNR, resolutionNR, epsilonNR, true, xNR, lambdaNR);
+    // Writes the results in a .txt file
+    if(writeData(xNR, lambdaNR, "NR")){return EXIT_FAILURE;}
+
+
+
+
+
+
 
 
     return 0;

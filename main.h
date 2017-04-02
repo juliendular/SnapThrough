@@ -28,8 +28,12 @@ void analytical(double xMin, double xMax, int resolution,
     std::vector<double> &x, std::vector<double> &lambda);
 void incremental(double lambdaMax, int resolution,
     std::vector<double> &x, std::vector<double> &lambda);
+void newtonRaphson(double lambdaMax, int resolution, double epsilon, bool modified,
+    std::vector<double> &x, std::vector<double> &lambda);
+
 double residual(double x, double lambda);
 double KTExact(double x);
+int invert(double *matrix, double *invMatrix, int n);
 double qcrCalc(Truss &truss);
 // tools.cpp
 double power(double base, int exponent);
