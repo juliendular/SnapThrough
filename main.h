@@ -30,6 +30,14 @@ void incremental(double lambdaMax, int resolution,
     std::vector<double> &x, std::vector<double> &lambda);
 void newtonRaphson(double lambdaMax, int resolution, double epsilon, bool modified,
     std::vector<double> &x, std::vector<double> &lambda);
+void arcLength(double xMax, double dLambda0, double phi,
+    int maxIteration, int idealIteration,
+    double epsilon, bool normal,
+    std::vector<double> &x, std::vector<double> &lambda);
+
+void predictorAL(double x, double lambda, double phi, double Dl,
+    double *dlambda, double *dx);
+
 
 double residual(double x, double lambda);
 double KTExact(double x);

@@ -44,15 +44,27 @@ int main(int argc, char *argv[]){
 
     double lambdaMaxNR = 1.5;
     int resolutionNR = 10;
-    double epsilonNR = 0.05;
+    double epsilonNR = 0.01;
     std::vector<double> xNR(resolutionNR);
     std::vector<double> lambdaNR(resolutionNR);
     // Performs the incremental method
-    newtonRaphson(lambdaMaxNR, resolutionNR, epsilonNR, true, xNR, lambdaNR);
+    newtonRaphson(lambdaMaxNR, resolutionNR, epsilonNR, false, xNR, lambdaNR);
     // Writes the results in a .txt file
     if(writeData(xNR, lambdaNR, "NR")){return EXIT_FAILURE;}
 
-
+    // ----- Spherical Arc-Length method -----
+    double xMaxAL = 2.5;
+    int maxIteration = 5;
+    int idealIteration = 4;
+    double dLambda0 = 0.1;
+    double epsilonAL = 0.01;
+    double phi = 1;
+    std::vector<double> xAL;
+    std::vector<double> lambdaAL;
+    arcLength(xMaxAL, dLambda0, phi, maxIteration, idealIteration,
+        epsilonAL, false, xAL, lambdaAL);
+    // Writes the results in a .txt file
+    if(writeData(xAL, lambdaAL, "AL")){return EXIT_FAILURE;}
 
 
 

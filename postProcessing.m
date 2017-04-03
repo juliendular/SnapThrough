@@ -1,7 +1,7 @@
 load('build/results/analytical.txt');
 load('build/results/incremental.txt');
 load('build/results/NR.txt');
-
+load('build/results/AL.txt');
 
 
 %%
@@ -18,12 +18,13 @@ hold on
 plot(analytical(1,:), analytical(2,:), 'linewidth', 1);
 plot(incremental(1,:), incremental(2,:), '-ro', 'LineWidth',2);
 plot(NR(1,:), NR(2,:), '-mo', 'LineWidth',2);
+plot(AL(1,:), AL(2,:), '-bo', 'LineWidth',2);
 
 
 xlabel('$x$ [-]','Interpreter','latex','FontSize',24);
 ylabel('$\lambda$ [-]','Interpreter','latex','FontSize',24);
 %xlim([0,1]);
-ylim([-0.5,2]);
+%ylim([-0.5,2]);
 
 %% 
 lambda = linspace(-5, 5, 101);
