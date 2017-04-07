@@ -4,6 +4,7 @@
 #define N_PARAM 3
 
 int readData(std::string fileName, Truss &truss, Parameters &parameters){
+    /*
     // Get the file
     std::ifstream inFile(fileName);
     std::string buf;
@@ -89,4 +90,5 @@ int readData(std::string fileName, Truss &truss, Parameters &parameters){
             continue;
         }
     }
+    */
 }

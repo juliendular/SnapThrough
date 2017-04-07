@@ -8,25 +8,21 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }
 
-    // ----- PARAMETERS -----
-    // Truss definition
-    Truss truss;
-    truss.A = 0.1; // Cross-section area [m^2]
-    truss.a = 1; // Horizontal projection of one bar [m]
-    truss.b = 1; // Vertical projection of one bar [m]
-    truss.E = 210000000000; // Young's modulus [N/m^2]
-    truss.l0 = sqrt(power(truss.a,2) + power(truss.b,2)); // Length of one bar [m]
+    // ----- Simple truss study -----
+    Truss truss = simpleTruss();
+
+    // ----- Parameters -----
     // Numerical parameters
     int resolAna = 100;
     double xMin = -0.5;
     double xMax = 2.5;
 
     // ----- Analytical solution -----
-    double qcr = qcrCalc(truss);
+    //double qcr = qcrCalc(truss);
     std::vector<double> xAna;
     std::vector<double> lambdaAna;
     // Computes the analytical solution
-    analytical(xMin, xMax, resolAna, xAna, lambdaAna);
+    analytical(truss, xMin, xMax, resolAna, xAna, lambdaAna);
     // Writes the results in a .txt file
     if(writeData(xAna, lambdaAna, "analytical")){return EXIT_FAILURE;}
 
@@ -36,7 +32,7 @@ int main(int argc, char *argv[]){
     std::vector<double> xIncr(resolutionIncr);
     std::vector<double> lambdaIncr(resolutionIncr);
     // Performs the incremental method
-    incremental(lambdaMaxIncr, resolutionIncr, xIncr, lambdaIncr);
+    incremental(truss, lambdaMaxIncr, resolutionIncr, xIncr, lambdaIncr);
     // Writes the results in a .txt file
     if(writeData(xIncr, lambdaIncr, "incremental")){return EXIT_FAILURE;}
 
@@ -48,7 +44,7 @@ int main(int argc, char *argv[]){
     std::vector<double> xNR(resolutionNR);
     std::vector<double> lambdaNR(resolutionNR);
     // Performs the incremental method
-    newtonRaphson(lambdaMaxNR, resolutionNR, epsilonNR, false, xNR, lambdaNR);
+    newtonRaphson(truss, lambdaMaxNR, resolutionNR, epsilonNR, false, xNR, lambdaNR);
     // Writes the results in a .txt file
     if(writeData(xNR, lambdaNR, "NR")){return EXIT_FAILURE;}
 
@@ -61,7 +57,7 @@ int main(int argc, char *argv[]){
     double phi = 1;
     std::vector<double> xAL;
     std::vector<double> lambdaAL;
-    arcLength(xMaxAL, dLambda0, phi, maxIteration, idealIteration,
+    arcLength(truss, xMaxAL, dLambda0, phi, maxIteration, idealIteration,
         epsilonAL, false, xAL, lambdaAL);
     // Writes the results in a .txt file
     if(writeData(xAL, lambdaAL, "AL")){return EXIT_FAILURE;}
@@ -70,6 +66,15 @@ int main(int argc, char *argv[]){
 
 
 
+    // Test...
+    std::vector<double> u(2);
+    std::vector<double> F(2);
+    std::vector<double> OOB(2,0.0);
+    u[0] = 0; u[1] = 0.1;
+    F[0] = 0; F[1] = 0;
+    PVW(truss, u, F, OOB);
+
+    std::cout << "OOB force: " << PVW(truss, 0.1, 0) << std::endl;
 
     return 0;
 }

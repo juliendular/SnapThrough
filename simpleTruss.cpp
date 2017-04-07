@@ -8,7 +8,7 @@ IN: - xMin: starting displacement
     - x: vector of displacement to be filled
     - lambda: vector of forces to be filled
 */
-void analytical(double xMin, double xMax, int resolution,
+void analytical(Truss &truss, double xMin, double xMax, int resolution,
     std::vector<double> &x, std::vector<double> &lambda){
 
     double dx = (xMax-xMin) / (double)resolution;
@@ -23,7 +23,7 @@ void analytical(double xMin, double xMax, int resolution,
 }
 
 /* Implements the incremental method */
-void incremental(double lambdaMax, int resolution,
+void incremental(Truss &truss, double lambdaMax, int resolution,
     std::vector<double> &x, std::vector<double> &lambda){
     // Charge increment
     double dlambda = lambdaMax/((double) resolution);
@@ -35,18 +35,18 @@ void incremental(double lambdaMax, int resolution,
         // Updates the force vector
         lambda[it] = lambda[it-1] + dlambda;
         // Computes the inverse tangent matrix
-        double KT = KTExact(x[it-1]);
+        double KT = KTFD(truss, x[it-1]);
         double KTinv;
         invert(&KT, &KTinv, 1);
         // Updates the displacement vector
-        x[it] = x[it-1] - KTinv * residual(x[it-1], lambda[it]);
+        x[it] = x[it-1] - KTinv * PVW(truss, x[it-1], lambda[it]);
     }
     return;
 }
 
 /* Implements the Newton-Raphson method */
-void newtonRaphson(double lambdaMax, int resolution, double epsilon, bool modified,
-    std::vector<double> &x, std::vector<double> &lambda){
+void newtonRaphson(Truss &truss, double lambdaMax, int resolution, double epsilon,
+    bool modified, std::vector<double> &x, std::vector<double> &lambda){
     // Charge increment
     double dlambda = lambdaMax/((double) resolution);
     // First step: the equilibrium position for zero displacement/force
@@ -57,22 +57,22 @@ void newtonRaphson(double lambdaMax, int resolution, double epsilon, bool modifi
         // Updates the force vector
         lambda[it] = lambda[it-1] + dlambda;
         // Computes the inverse tangent matrix
-        double KT = KTExact(x[it-1]);
+        double KT = KTFD(truss, x[it-1]);
         double KTinv;
         invert(&KT, &KTinv, 1);
         // Predictor
-        double xCurr = x[it-1] - KTinv * residual(x[it-1], lambda[it]);
+        double xCurr = x[it-1] - KTinv * PVW(truss, x[it-1], lambda[it]);
         // Corrector until epsilon precision is reached
-        double currentResidual = residual(xCurr, lambda[it]);
+        double currentResidual = PVW(truss, xCurr, lambda[it]);
         while(currentResidual > epsilon || -currentResidual > epsilon){
             // Computes the new inverse tangent matrix if not modified NR
             if(!modified){
-                KT = KTExact(xCurr);
+                KT = KTFD(truss, xCurr);
                 invert(&KT, &KTinv, 1);
             }
             // Corrects the displacement
             xCurr = xCurr - KTinv * currentResidual;
-            currentResidual = residual(xCurr, lambda[it]);
+            currentResidual = PVW(truss, xCurr, lambda[it]);
         }
         // Updates the displacement vector
         x[it] = xCurr;
@@ -80,7 +80,7 @@ void newtonRaphson(double lambdaMax, int resolution, double epsilon, bool modifi
 }
 
 /* Implements the arc-length method */
-void arcLength(double xMax, double dLambda0, double phi,
+void arcLength(Truss &truss, double xMax, double dLambda0, double phi,
     int maxIteration, int idealIteration,
     double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda){
@@ -95,21 +95,21 @@ void arcLength(double xMax, double dLambda0, double phi,
         // --- Predictor ---
         double dlambdaCurr;
         double dxCurr;
-        predictorAL(x[it-1], lambda[it-1], phi, Dl, &dlambdaCurr, &dxCurr);
+        predictorAL(truss, x[it-1], lambda[it-1], phi, Dl, &dlambdaCurr, &dxCurr);
         // Initialization of the corrector
         double xCurr = x[it-1] + dxCurr;
         double lambdaCurr = lambda[it-1] + dlambdaCurr;
-        double currentResidual = residual(xCurr, lambdaCurr);
+        double currentResidual = PVW(truss, xCurr, lambdaCurr);
         // Loop on the corrector until convergence
         int corrIt;
         for(corrIt=1 ; corrIt < maxIteration && (currentResidual>epsilon || -currentResidual>epsilon) ; corrIt++){
             // --- Corrector ---
             // Computes the inverse of the tangent stiffness matrix
-            double KT = KTExact(xCurr);
+            double KT = KTFD(truss, xCurr);
             double KTinv;
             invert(&KT, &KTinv, 1);
             // Computes dxBar and dxt
-            double dxBar = -KTinv * residual(xCurr, lambdaCurr);
+            double dxBar = -KTinv * PVW(truss, xCurr, lambdaCurr);
             double dxt = KTinv;
             // Computes the a's coefficients
             double a1, a2, a3;
@@ -137,7 +137,7 @@ void arcLength(double xMax, double dLambda0, double phi,
             // Updates force and displacement
             xCurr = x[it-1] + dxCurr;
             lambdaCurr = lambda[it-1] + dlambdaCurr;
-            currentResidual = residual(xCurr, lambdaCurr);
+            currentResidual = PVW(truss, xCurr, lambdaCurr);
             //std::cout << currentResidual << std::endl;
         }
         std::cout << "end with " << corrIt << " iterations" << std::endl;
@@ -157,14 +157,14 @@ void arcLength(double xMax, double dLambda0, double phi,
 }
 
 /* Provides predictor values for the arc-length method */
-void predictorAL(double x, double lambda, double phi, double Dl,
+void predictorAL(Truss &truss, double x, double lambda, double phi, double Dl,
     double *dlambda, double *dx){
     // Computes the inverse of the tangent stiffness matrix
-    double KT = KTExact(x);
+    double KT = KTFD(truss, x);
     double KTinv;
     invert(&KT, &KTinv, 1);
     // Computes dxBar and dxt
-    double dxBar = -KTinv * residual(x, lambda);
+    double dxBar = -KTinv * PVW(truss, x, lambda);
     double dxt = KTinv;
     // Evaluate the positive definiteness of the tangent stiffness matrix
     bool positiveDefinite = (KT > 0); // TO IMPROVE
@@ -203,6 +203,13 @@ double KTExact(double x){
     return BETA * (3*x*x - 6*x + 2);
 }
 
+/* Computes the tangent stiffness matrix with a finite difference method */
+double KTFD(Truss &truss, double x){
+    double dx = 0.001; // GOOD VALUE ???
+    return (PVW(truss, x+dx, 0) - PVW(truss, x-dx, 0)) / (2*dx);
+}
+
+
 /* Inverts a n*n matrix */
 int invert(double *matrix, double *invMatrix, int n){
     if(n==1){
@@ -226,8 +233,9 @@ int invert(double *matrix, double *invMatrix, int n){
 }
 
 
-
+/* TO CHANGE !!!
 // Computes the critical charge (in [N] !) of the truss given as a parameter
 double qcrCalc(Truss &truss){
     return sqrt(3)*truss.A*truss.E*power(truss.b, 3) / (9.0*power(truss.l0,3));
 }
+*/
