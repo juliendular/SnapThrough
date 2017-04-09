@@ -1,0 +1,170 @@
+#include "main.h"
+
+
+/* Implements the multidimensional arc-length method */
+void arcLength(Truss &truss, std::vector<double> qef, double phi,
+    int maxIteration, int idealIteration, double epsilon, bool normal,
+    std::vector<std::vector<double> > &p, std::vector<double> &lambda){
+    // Initialization
+    int nbDof = truss.nbDof;
+    std::vector<double> pInit(nbDof, 0.0);
+    p.push_back(pInit);
+    lambda.push_back(0.0);
+    // Initial arc-length
+    double Dl = 500000; // TO MODIFY !!!
+    // Loop until lambda = 1
+    int it = 1;
+    while(lambda[it-1]<1){
+        // --- Predictor ---
+        double dLambda0;
+        std::vector<double> dp0(nbDof);
+        predictorAL(truss, p[it-1], lambda[it-1], phi, qef, Dl, dp0, dLambda0);
+        // Initialization of the corrector
+        std::vector<double> p0;
+        vvPlus(p[it-1], dp0, p0);
+        double lambda0 = lambda[it-1] + dLambda0;
+        std::vector<double> OOB(nbDof);
+        PVW(truss, p0, qef, lambda0, OOB);
+        // Estimate the adimensional OOB force
+        double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef))/lambda0;
+        // Loop on the corrector until convergence
+        int corrIt;
+        for(corrIt=1 ; corrIt < maxIteration && (OOBeq>epsilon || -OOBeq>epsilon) ; corrIt++){
+            // --- Corrector ---
+            // Computes the inverse of the tangent stiffness matrix
+            std::vector<std::vector<double> > KT(truss.nbDof);
+            std::vector<std::vector<double> > KTinv(truss.nbDof);
+            for(int i=0 ; i<truss.nbDof ; i++){
+                KT[i].resize(truss.nbDof);
+                KTinv[i].resize(truss.nbDof);
+            }
+            KTFD(truss, p0, KT);
+            inv(KT, KTinv);
+            // Computes dxBar and dxt
+            std::vector<double> dpt(truss.nbDof);
+            std::vector<double> dpBar(truss.nbDof);
+            mv(KTinv, qef, dpt);
+            mv(KTinv, OOB, dpBar);
+            sv(-1.0, dpBar, dpBar); // CHECK IT...
+            // Computes the a's coefficients
+            double a1, a2, a3;
+            std::vector<double> tmp(nbDof);
+            vvPlus(dp0, dpBar, tmp);
+            a1 = vv(dpt, dpt) + power(phi,2) * vv(qef, qef);
+            a2 = 2*vv(dpt, tmp) + 2*dLambda0*power(phi,2)*vv(qef, qef);
+            a3 = vv(tmp, tmp) - power(Dl,2) + power(dLambda0*phi, 2)*vv(qef, qef);
+            // Deduces the possible values for dlambda/dx
+            double rho = power(a2,2) - 4*a1*a3;
+            double dLambda1 = (-a2 + sqrt(rho))/(2*a1);
+            double dLambda2 = (-a2 - sqrt(rho))/(2*a1);
+            std::vector<double> dp1(nbDof); // = dpBar + dlambda1 * dpt;
+            std::vector<double> dp2(nbDof); // = dpBar + dlambda2 * dpt;
+            sv(dLambda1, dpt, tmp);
+            vvPlus(dpBar, tmp, dp1);
+            sv(dLambda2, dpt, tmp);
+            vvPlus(dpBar, tmp, dp2);
+            // Determines the good ones (no need to divide by Dl^2)
+            std::vector<double> dpNext1(nbDof);
+            std::vector<double> dpNext2(nbDof);
+            vvPlus(dp0, dp1, dpNext1);
+            vvPlus(dp0, dp2, dpNext2);
+            double cos1 = vv(dp0,dpNext1) + power(phi,2)*vv(qef,qef)*dLambda0*(dLambda0+dLambda1);
+            double cos2 = vv(dp0,dpNext2) + power(phi,2)*vv(qef,qef)*dLambda0*(dLambda0+dLambda2);
+            if(cos1 > cos2){
+                dLambda0 += dLambda1;
+                dp0 = dpNext1;
+            }
+            else{
+                dLambda0 += dLambda2;
+                dp0 = dpNext2;
+            }
+            // Updates force and displacement
+            vvPlus(p[it-1], dp0, p0);
+            lambda0 = lambda[it-1] + dLambda0;
+            PVW(truss, p0, qef, lambda0, OOB);
+            OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef))/lambda0;
+        }
+        if(corrIt == maxIteration){
+            Dl = Dl/4.0;
+            std::cout << "Restart iteration " << it << std::endl;
+        }
+        else{
+            // Update arc-length
+            Dl = Dl * sqrt( (double)idealIteration / (double)corrIt );
+            // Save displacement and force
+            p.push_back(p0);
+            lambda.push_back(lambda0);
+            it++;
+        }
+    }
+}
+
+/* Computes a predictor for the mulidimensional arc-length method */
+void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi,
+    std::vector<double> &qef, double Dl, std::vector<double> &dp, double &dLambda){
+    // Computes the inverse of the tangent stiffness matrix
+    std::vector<std::vector<double> > KT(truss.nbDof);
+    std::vector<std::vector<double> > KTinv(truss.nbDof);
+    for(int i=0 ; i<truss.nbDof ; i++){
+        KT[i].resize(truss.nbDof);
+        KTinv[i].resize(truss.nbDof);
+    }
+    KTFD(truss, p, KT);
+    inv(KT, KTinv);
+    // Deduces dpt (assumption residual is small)
+    std::vector<double> dpt(truss.nbDof);
+    std::vector<double> dpBar(truss.nbDof);
+    std::vector<double> OOB(truss.nbDof);
+    PVW(truss, p, qef, lambda, OOB);
+    mv(KTinv, qef, dpt);
+    mv(KTinv, OOB, dpBar);
+    sv(-1.0, dpBar, dpBar);
+    // Evaluate the positive definiteness of KT
+    bool posDef = posDefinite(KT);
+    // Computes the load increase
+    double term1 = - vv(dpBar, dpt);
+    double rad = power(vv(dpBar,dpBar)*vv(dpt,dpt),2)
+                 + (power(Dl,2) - vv(dpBar,dpBar)) * (vv(dpt,dpt)+power(phi,2)*vv(qef,qef));
+    double deno = vv(dpt,dpt) + power(phi,2)*vv(qef,qef);
+    if(posDef){dLambda = (term1 + sqrt(rad)) / deno;}
+    else{dLambda = (term1 - sqrt(rad)) / deno;}
+    /*
+    double rad = vv(dpt, dpt) + power(phi,2) * vv(qef, qef);
+    if(posDef){dLambda = Dl/sqrt(rad);}
+    else{dLambda = -Dl/sqrt(rad);}*/
+    // Deduce the displacement increase
+    sv(dLambda, dpt, dp);
+    // Return
+    return;
+}
+
+/* Computes the tangent stifness matrix */
+void KTFD(Truss &truss, std::vector<double> &p, std::vector<std::vector<double> > &KT){
+    // Step for central finite differenc
+    double dp = 0.001;
+    // Vector of zero forces
+    std::vector<double> F(truss.nbDof, 0.0);
+    // Stiffness for each direction
+    for(int i=0 ; i<KT.size() ; i++){
+        // Displacement
+        std::vector<double> pP(truss.nbDof);
+        std::vector<double> pM(truss.nbDof);
+        pP = p;
+        pM = p;
+        pP[i] += dp/2.0;
+        pM[i] += -dp/2.0;
+        // OOB forces
+        std::vector<double> OOB_P(truss.nbDof);
+        std::vector<double> OOB_M(truss.nbDof);
+        std::vector<double> F(truss.nbDof, 0.0);
+        PVW(truss, pP, F, OOB_P);
+        PVW(truss, pM, F, OOB_M);
+        // Finite difference partial derivative
+        std::vector<double> stiffness(truss.nbDof);
+        sv(-1, OOB_M, OOB_M);
+        vvPlus(OOB_P, OOB_M, stiffness);
+        sv(1.0/dp, stiffness, stiffness);
+        // Saving in KT
+        KT[i] = stiffness;
+    }
+}

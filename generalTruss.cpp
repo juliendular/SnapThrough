@@ -10,10 +10,10 @@ Truss simpleTruss(){
     // Field declaration
     int nbNodes = 3;
     int nbBars = 2;
-    double a = 1;
+    double a = 2;
     double b = 1;
-    double E = 73.4846922;//210000000000;
-    double A = 0.1;
+    double E = 70000000000;
+    double A = 0.01;
     // Fields preparation
     nodes.resize(nbNodes*2);
     lockings.resize(nbNodes*2);
@@ -27,7 +27,7 @@ Truss simpleTruss(){
     nodes[0] = 0.0; // x component of node 0
     nodes[1] = 0.0; // y component of node 0
     nodes[2] = a;
-    nodes[3] = -b; // TO HAVE POSITIVE VALUES
+    nodes[3] = -b; // TO HAVE POSITIVE VALUES !!!!
     nodes[4] = 2*a;
     nodes[5] = 0.0;
     // Bars definition
@@ -41,7 +41,7 @@ Truss simpleTruss(){
     // Constraints
     lockings[0] = 1;
     lockings[1] = 1;
-    lockings[2] = 0;
+    lockings[2] = 1;
     lockings[3] = 0;
     lockings[4] = 1;
     lockings[5] = 1;
@@ -77,13 +77,20 @@ Bar createBar(int nodeOne, int nodeTwo, double nodeOneX, double nodeOneY,
 
 // For a simple 1 DOF case
 double PVW(Truss &truss, double u, double F){
-    std::vector<double> uVec; uVec.push_back(0); uVec.push_back(u);
-    std::vector<double> FVec; FVec.push_back(0); FVec.push_back(F);
-    std::vector<double> OOBVec(2);
+    std::vector<double> uVec(1,u);
+    std::vector<double> FVec(1,F);
+    std::vector<double> OOBVec(1);
     PVW(truss, uVec, FVec, OOBVec);
-    return OOBVec[1];
+    return OOBVec[0];
 }
 
+void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F, double lambda,
+    std::vector<double> &OOB){
+    // Call the usual function
+    std::vector<double> realForce(truss.nbDof);
+    sv(lambda, F, realForce);
+    PVW(truss, u, realForce, OOB);
+}
 
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB){
@@ -108,8 +115,20 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
                     a = truss.nodes[2*node] - truss.nodes[2*bar.nodes[1]];
                     b = truss.nodes[2*node+1] - truss.nodes[2*bar.nodes[1]+1];
                 }
-                // Current length (integer division...)
-                double l2 = power(a+u[2*(dof/2)],2) + power(b+u[2*(dof/2)+1],2);
+                // Current length
+                double l2;
+                if(!(i%2)){ // DOF along x-direction
+                    if(!truss.lockings[i+1])
+                        l2 = power(a+u[dof],2) + power(b+u[dof+1],2);
+                    else
+                        l2 = power(a+u[dof],2) + power(b,2);
+                }
+                else{ // DOF along y-direction
+                    if(!truss.lockings[i-1])
+                        l2 = power(a+u[dof-1],2) + power(b+u[dof],2);
+                    else
+                        l2 = power(a,2) + power(b+u[dof],2);
+                }
                 // Green-Lagrange virtual strain
                 double dE11;
                 if(i%2){dE11 = (b+u[dof])/power(bar.l0,2);}

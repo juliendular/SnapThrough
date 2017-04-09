@@ -9,28 +9,32 @@ IN: - xMin: starting displacement
     - lambda: vector of forces to be filled
 */
 void analytical(Truss &truss, double xMin, double xMax, int resolution,
-    std::vector<double> &x, std::vector<double> &lambda){
+    std::vector<double> &x, std::vector<double> &lambda, double qef){
 
-    double dx = (xMax-xMin) / (double)resolution;
+    double beta = truss.bars[0].E*truss.bars[0].A/(2.0*power(truss.bars[0].l0,3)*qef);
+    double b = -truss.nodes[3];
+
+    double dx = (xMax-xMin) / ((double)resolution - 1);
     double xCurrent = xMin;
 
     for(int i=0 ; i<resolution ; i++){
         x.push_back(xCurrent);
-        lambda.push_back(BETA * xCurrent * (xCurrent-1) * (xCurrent-2));
+        // The factor 2* holds for the whole truss !!
+        lambda.push_back(2 * beta * xCurrent * (xCurrent-b) * (xCurrent-2*b));
         xCurrent += dx;
     }
 
 }
 
-/* Implements the incremental method */
-void incremental(Truss &truss, double lambdaMax, int resolution,
+/* Implements the incremental method for a 1 DOF truss */
+void incremental(Truss &truss, double qef, int resolution,
     std::vector<double> &x, std::vector<double> &lambda){
     // Charge increment
-    double dlambda = lambdaMax/((double) resolution);
+    double dlambda = 1/((double) resolution - 1);
     // First step: the equilibrium position for zero displacement/force
     x[0] = 0.0;
     lambda[0] = 0.0;
-    // Loop until lambdaMax
+    // Loop until lambda = 1
     for(int it = 1 ; it < resolution ; it++){
         // Updates the force vector
         lambda[it] = lambda[it-1] + dlambda;
@@ -39,20 +43,20 @@ void incremental(Truss &truss, double lambdaMax, int resolution,
         double KTinv;
         invert(&KT, &KTinv, 1);
         // Updates the displacement vector
-        x[it] = x[it-1] - KTinv * PVW(truss, x[it-1], lambda[it]);
+        x[it] = x[it-1] - KTinv * PVW(truss, x[it-1], lambda[it]*qef);
     }
     return;
 }
 
-/* Implements the Newton-Raphson method */
-void newtonRaphson(Truss &truss, double lambdaMax, int resolution, double epsilon,
+/* Implements the Newton-Raphson method for a 1 DOF truss */
+void newtonRaphson(Truss &truss, double qef, int resolution, double epsilon,
     bool modified, std::vector<double> &x, std::vector<double> &lambda){
     // Charge increment
-    double dlambda = lambdaMax/((double) resolution);
+    double dlambda = 1/((double) resolution - 1);
     // First step: the equilibrium position for zero displacement/force
     x[0] = 0.0;
     lambda[0] = 0.0;
-    // Loop until lambdaMax
+    // Loop until lambda = 1
     for(int it = 1 ; it < resolution ; it++){
         // Updates the force vector
         lambda[it] = lambda[it-1] + dlambda;
@@ -61,10 +65,11 @@ void newtonRaphson(Truss &truss, double lambdaMax, int resolution, double epsilo
         double KTinv;
         invert(&KT, &KTinv, 1);
         // Predictor
-        double xCurr = x[it-1] - KTinv * PVW(truss, x[it-1], lambda[it]);
+        double xCurr = x[it-1] - KTinv * PVW(truss, x[it-1], lambda[it]*qef);
         // Corrector until epsilon precision is reached
-        double currentResidual = PVW(truss, xCurr, lambda[it]);
-        while(currentResidual > epsilon || -currentResidual > epsilon){
+        double currentResidual = PVW(truss, xCurr, lambda[it]*qef);
+        while(currentResidual > epsilon*lambda[it]*qef ||
+              -currentResidual > epsilon*lambda[it]*qef){
             // Computes the new inverse tangent matrix if not modified NR
             if(!modified){
                 KT = KTFD(truss, xCurr);
@@ -72,11 +77,29 @@ void newtonRaphson(Truss &truss, double lambdaMax, int resolution, double epsilo
             }
             // Corrects the displacement
             xCurr = xCurr - KTinv * currentResidual;
-            currentResidual = PVW(truss, xCurr, lambda[it]);
+            currentResidual = PVW(truss, xCurr, lambda[it]*qef);
         }
         // Updates the displacement vector
         x[it] = xCurr;
     }
+}
+
+/* Calls the general arc-length method */
+void arcLength(Truss &truss, double qef, double phi, int maxIteration,
+    int idealIteration, double epsilon, bool normal,
+    std::vector<double> &x, std::vector<double> &lambda){
+    // Declares one-element vectors
+    std::vector<double> qefVec(1, qef);
+    std::vector<std::vector<double> > p;
+    // Calls the general function
+    arcLength(truss, qefVec, phi, maxIteration, idealIteration, epsilon, normal,
+        p, lambda);
+    // Extract the information from p to x
+    x.resize(p.size());
+    for(int i=0 ; i<p.size() ; i++)
+        x[i] = p[i][0];
+    // Return
+    return;
 }
 
 /* Implements the arc-length method */
@@ -133,12 +156,10 @@ void arcLength(Truss &truss, double xMax, double dLambda0, double phi,
                 dlambdaCurr = dlambdaCurr + dlambda2;
                 dxCurr = dxCurr + dx2;
             }
-            //std::cout << dxCurr << " " << dlambdaCurr << std::endl;
             // Updates force and displacement
             xCurr = x[it-1] + dxCurr;
             lambdaCurr = lambda[it-1] + dlambdaCurr;
             currentResidual = PVW(truss, xCurr, lambdaCurr);
-            //std::cout << currentResidual << std::endl;
         }
         std::cout << "end with " << corrIt << " iterations" << std::endl;
         if(corrIt == maxIteration){

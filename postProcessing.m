@@ -16,7 +16,7 @@ grid on
 hold on
 
 plot(analytical(1,:), analytical(2,:), 'linewidth', 1);
-plot(incremental(1,:), incremental(2,:), '-ro', 'LineWidth',2);
+%plot(incremental(1,:), incremental(2,:), '-ro', 'LineWidth',2);
 plot(NR(1,:), NR(2,:), '-mo', 'LineWidth',2);
 plot(AL(1,:), AL(2,:), '-bo', 'LineWidth',2);
 
@@ -24,7 +24,7 @@ plot(AL(1,:), AL(2,:), '-bo', 'LineWidth',2);
 xlabel('$x$ [-]','Interpreter','latex','FontSize',24);
 ylabel('$\lambda$ [-]','Interpreter','latex','FontSize',24);
 %xlim([0,1]);
-%ylim([-0.5,2]);
+ylim([-1.1,1.1]);
 
 %% 
 lambda = linspace(-5, 5, 101);

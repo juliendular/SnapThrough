@@ -41,30 +41,44 @@ Truss threeBarTruss();
 Bar createBar(int nodeOne, int nodeTwo, double nodeOneX, double nodeOneY,
     double nodeTwoX, double nodeTwoY, double E, double A);
 double PVW(Truss &truss, double u, double F);
+void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F, double lambda,
+    std::vector<double> &OOB);
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB);
-
-
+// genaralSolver.cpp
+void arcLength(Truss &truss, std::vector<double> qef, double phi,
+    int maxIteration, int idealIteration, double epsilon, bool normal,
+    std::vector<std::vector<double> > &p, std::vector<double> &lambda);
+void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi,
+    std::vector<double> &qef, double Dl, std::vector<double> &dp, double &dLambda);
+void KTFD(Truss &truss, std::vector<double> &p, std::vector<std::vector<double> > &KT);
 // simpleTruss.cpp
 void analytical(Truss &truss, double xMin, double xMax, int resolution,
+    std::vector<double> &x, std::vector<double> &lambda, double qef);
+void incremental(Truss &truss, double qefIncr, int resolution,
     std::vector<double> &x, std::vector<double> &lambda);
-void incremental(Truss &truss, double lambdaMax, int resolution,
-    std::vector<double> &x, std::vector<double> &lambda);
-void newtonRaphson(Truss &truss, double lambdaMax, int resolution, double epsilon, bool modified,
+void newtonRaphson(Truss &truss, double qef, int resolution, double epsilon, bool modified,
     std::vector<double> &x, std::vector<double> &lambda);
 void arcLength(Truss &truss, double xMax, double dLambda0, double phi,
     int maxIteration, int idealIteration,
     double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda);
-
+void arcLength(Truss &truss, double qef, double phi, int maxIteration,
+    int idealIteration, double epsilon, bool normal,
+    std::vector<double> &x, std::vector<double> &lambda);
 void predictorAL(Truss &truss, double x, double lambda, double phi, double Dl,
     double *dlambda, double *dx);
 
-
-double residual(double x, double lambda);
 double KTExact(double x);
 double KTFD(Truss &truss, double x);
 int invert(double *matrix, double *invMatrix, int n);
 double qcrCalc(Truss &truss);
 // tools.cpp
 double power(double base, int exponent);
+void vvPlus(std::vector<double> &v1, std::vector<double> &v2, std::vector<double> &sum);
+void sv(double s, std::vector<double> &v, std::vector<double> &p);
+double vv(std::vector<double> &v1, std::vector<double> &v2);
+void mv(std::vector<std::vector<double> > &m, std::vector<double> &v,
+    std::vector<double> &p);
+int inv(std::vector<std::vector<double> > &m, std::vector<std::vector<double> > &invM);
+bool posDefinite(std::vector<std::vector<double> > &m);

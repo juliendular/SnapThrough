@@ -13,57 +13,57 @@ int main(int argc, char *argv[]){
 
     // ----- Parameters -----
     // Numerical parameters
-    int resolAna = 100;
+    int resolAna = 1000;
     double xMin = -0.5;
     double xMax = 2.5;
+    double qcr = 2*12049281; // Factor 2 because 2*q w.r.t. notations in statement
+    double qef = 1.2*qcr;
 
     // ----- Analytical solution -----
     //double qcr = qcrCalc(truss);
     std::vector<double> xAna;
     std::vector<double> lambdaAna;
     // Computes the analytical solution
-    analytical(truss, xMin, xMax, resolAna, xAna, lambdaAna);
+    analytical(truss, xMin, xMax, resolAna, xAna, lambdaAna, qef);
     // Writes the results in a .txt file
     if(writeData(xAna, lambdaAna, "analytical")){return EXIT_FAILURE;}
 
     // ----- Incremental method -----
-    double lambdaMaxIncr = 1.5;
-    int resolutionIncr = 10;
+    double qefIncr = qef;
+    int resolutionIncr = 11;
     std::vector<double> xIncr(resolutionIncr);
     std::vector<double> lambdaIncr(resolutionIncr);
     // Performs the incremental method
-    incremental(truss, lambdaMaxIncr, resolutionIncr, xIncr, lambdaIncr);
+    incremental(truss, qefIncr, resolutionIncr, xIncr, lambdaIncr);
     // Writes the results in a .txt file
     if(writeData(xIncr, lambdaIncr, "incremental")){return EXIT_FAILURE;}
 
     // ----- Newton-Raphson method -----
-
-    double lambdaMaxNR = 1.5;
-    int resolutionNR = 10;
-    double epsilonNR = 0.01;
+    double qefNR = qef;
+    int resolutionNR = 11;
+    double epsilonNR = 0.0001;
     std::vector<double> xNR(resolutionNR);
     std::vector<double> lambdaNR(resolutionNR);
     // Performs the incremental method
-    newtonRaphson(truss, lambdaMaxNR, resolutionNR, epsilonNR, false, xNR, lambdaNR);
+    newtonRaphson(truss, qefNR, resolutionNR, epsilonNR, false, xNR, lambdaNR);
     // Writes the results in a .txt file
     if(writeData(xNR, lambdaNR, "NR")){return EXIT_FAILURE;}
 
     // ----- Spherical Arc-Length method -----
-    double xMaxAL = 2.5;
+    double qefAL = qef;
     int maxIteration = 5;
     int idealIteration = 4;
-    double dLambda0 = 0.1;
-    double epsilonAL = 0.01;
+    double epsilonAL = 0.001;
     double phi = 1;
     std::vector<double> xAL;
     std::vector<double> lambdaAL;
-    arcLength(truss, xMaxAL, dLambda0, phi, maxIteration, idealIteration,
+    arcLength(truss, qefAL, phi, maxIteration, idealIteration,
         epsilonAL, false, xAL, lambdaAL);
+
+    //arcLength(truss, xMaxAL, dLambda0, phi, maxIteration, idealIteration,
+    //    epsilonAL, false, xAL, lambdaAL);
     // Writes the results in a .txt file
     if(writeData(xAL, lambdaAL, "AL")){return EXIT_FAILURE;}
-
-
-
 
 
     // Test...
