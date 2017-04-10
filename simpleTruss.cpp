@@ -85,14 +85,14 @@ void newtonRaphson(Truss &truss, double qef, int resolution, double epsilon,
 }
 
 /* Calls the general arc-length method */
-void arcLength(Truss &truss, double qef, double phi, int maxIteration,
+void arcLength(Truss &truss, double qef, double phi, double dLambdaInit, int maxIteration,
     int idealIteration, double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda){
     // Declares one-element vectors
     std::vector<double> qefVec(1, qef);
     std::vector<std::vector<double> > p;
     // Calls the general function
-    arcLength(truss, qefVec, phi, maxIteration, idealIteration, epsilon, normal,
+    arcLength(truss, qefVec, phi, dLambdaInit, maxIteration, idealIteration, epsilon, normal,
         p, lambda);
     // Extract the information from p to x
     x.resize(p.size());
@@ -103,7 +103,7 @@ void arcLength(Truss &truss, double qef, double phi, int maxIteration,
 }
 
 /* Implements the arc-length method */
-void arcLength(Truss &truss, double xMax, double dLambda0, double phi,
+void arcLength1(Truss &truss, double xMax, double dLambda0, double phi,
     int maxIteration, int idealIteration,
     double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda){

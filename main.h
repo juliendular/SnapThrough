@@ -35,6 +35,7 @@ struct Parameters{
 int readData(std::string fileName, Truss &truss, Parameters &parameters);
 // writeData.cpp
 int writeData(std::vector<double> &x, std::vector<double> &y, std::string filename);
+int writeData(std::vector<std::vector<double> > &x, std::vector<double> &y, std::string fileName);
 // generalTruss.cpp
 Truss simpleTruss();
 Truss threeBarTruss();
@@ -46,7 +47,7 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F, double la
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB);
 // genaralSolver.cpp
-void arcLength(Truss &truss, std::vector<double> qef, double phi,
+void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambdaInit,
     int maxIteration, int idealIteration, double epsilon, bool normal,
     std::vector<std::vector<double> > &p, std::vector<double> &lambda);
 void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi,
@@ -59,11 +60,11 @@ void incremental(Truss &truss, double qefIncr, int resolution,
     std::vector<double> &x, std::vector<double> &lambda);
 void newtonRaphson(Truss &truss, double qef, int resolution, double epsilon, bool modified,
     std::vector<double> &x, std::vector<double> &lambda);
-void arcLength(Truss &truss, double xMax, double dLambda0, double phi,
+void arcLength1(Truss &truss, double xMax, double dLambda0, double phi,
     int maxIteration, int idealIteration,
     double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda);
-void arcLength(Truss &truss, double qef, double phi, int maxIteration,
+void arcLength(Truss &truss, double qef, double phi, double dLambdaInit, int maxIteration,
     int idealIteration, double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda);
 void predictorAL(Truss &truss, double x, double lambda, double phi, double Dl,

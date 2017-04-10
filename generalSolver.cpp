@@ -1,8 +1,44 @@
 #include "main.h"
 
+/* Implements the Newton-Raphson method for a multidimensinal truss */
+double initAL(Truss &truss, std::vector<double> &qef, double dLambda, double epsilon, double phi){
+    // First step: the equilibrium position for zero displacement/force
+    std::vector<double> p(truss.nbDof,0.0);
+    double lambda = 0.0 + dLambda;
+    // Computes the inverse of the tangent stiffness matrix
+    std::vector<std::vector<double> > KT(truss.nbDof);
+    std::vector<std::vector<double> > KTinv(truss.nbDof);
+    for(int i=0 ; i<truss.nbDof ; i++){
+        KT[i].resize(truss.nbDof);
+        KTinv[i].resize(truss.nbDof);
+    }
+    KTFD(truss, p, KT);
+    inv(KT, KTinv);
+    // Predictor
+    std::vector<double> OOB(truss.nbDof);
+    std::vector<double> dp(truss.nbDof);
+    PVW(truss, p, qef, lambda, OOB);
+    mv(KTinv, OOB, dp);
+    sv(-1, dp, dp);
+    vvPlus(p, dp, p);
+    PVW(truss, p, qef, lambda, OOB);
+    double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef))/lambda;
+    // Corrector until epsilon precision is reached
+    while(OOBeq > epsilon || -OOBeq > epsilon){
+        // Does not compute the new inverse tangent matrix (modified NR)
+        // Corrects the displacement
+        mv(KTinv, OOB, dp);
+        sv(-1, dp, dp);
+        vvPlus(p, dp, p);
+        PVW(truss, p, qef, lambda, OOB);
+        OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
+    }
+    // Deduce the arc-length
+    return sqrt(vv(p,p) + power(phi*dLambda,2)*vv(qef,qef));
+}
 
 /* Implements the multidimensional arc-length method */
-void arcLength(Truss &truss, std::vector<double> qef, double phi,
+void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambdaInit,
     int maxIteration, int idealIteration, double epsilon, bool normal,
     std::vector<std::vector<double> > &p, std::vector<double> &lambda){
     // Initialization
@@ -11,7 +47,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi,
     p.push_back(pInit);
     lambda.push_back(0.0);
     // Initial arc-length
-    double Dl = 500000; // TO MODIFY !!!
+    double Dl = initAL(truss, qef, dLambdaInit, epsilon, phi);
     // Loop until lambda = 1
     int it = 1;
     while(lambda[it-1]<1){
@@ -26,7 +62,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi,
         std::vector<double> OOB(nbDof);
         PVW(truss, p0, qef, lambda0, OOB);
         // Estimate the adimensional OOB force
-        double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef))/lambda0;
+        double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
         // Loop on the corrector until convergence
         int corrIt;
         for(corrIt=1 ; corrIt < maxIteration && (OOBeq>epsilon || -OOBeq>epsilon) ; corrIt++){
@@ -45,7 +81,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi,
             std::vector<double> dpBar(truss.nbDof);
             mv(KTinv, qef, dpt);
             mv(KTinv, OOB, dpBar);
-            sv(-1.0, dpBar, dpBar); // CHECK IT...
+            sv(-1.0, dpBar, dpBar);
             // Computes the a's coefficients
             double a1, a2, a3;
             std::vector<double> tmp(nbDof);
@@ -82,7 +118,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi,
             vvPlus(p[it-1], dp0, p0);
             lambda0 = lambda[it-1] + dLambda0;
             PVW(truss, p0, qef, lambda0, OOB);
-            OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef))/lambda0;
+            OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));//lambda[it-1]; // can be negative
         }
         if(corrIt == maxIteration){
             Dl = Dl/4.0;
@@ -99,7 +135,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi,
     }
 }
 
-/* Computes a predictor for the mulidimensional arc-length method */
+/* Computes a predictor for the multidimensional arc-length method */
 void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi,
     std::vector<double> &qef, double Dl, std::vector<double> &dp, double &dLambda){
     // Computes the inverse of the tangent stiffness matrix
@@ -111,6 +147,7 @@ void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi
     }
     KTFD(truss, p, KT);
     inv(KT, KTinv);
+
     // Deduces dpt (assumption residual is small)
     std::vector<double> dpt(truss.nbDof);
     std::vector<double> dpBar(truss.nbDof);
@@ -123,17 +160,21 @@ void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi
     bool posDef = posDefinite(KT);
     // Computes the load increase
     double term1 = - vv(dpBar, dpt);
-    double rad = power(vv(dpBar,dpBar)*vv(dpt,dpt),2)
+    double rad = vv(dpBar,dpBar)*vv(dpt,dpt)
                  + (power(Dl,2) - vv(dpBar,dpBar)) * (vv(dpt,dpt)+power(phi,2)*vv(qef,qef));
     double deno = vv(dpt,dpt) + power(phi,2)*vv(qef,qef);
     if(posDef){dLambda = (term1 + sqrt(rad)) / deno;}
-    else{dLambda = (term1 - sqrt(rad)) / deno;}
+    else{dLambda = (term1 - sqrt(rad)) / deno;}//*/
     /*
     double rad = vv(dpt, dpt) + power(phi,2) * vv(qef, qef);
     if(posDef){dLambda = Dl/sqrt(rad);}
-    else{dLambda = -Dl/sqrt(rad);}*/
+    else{dLambda = -Dl/sqrt(rad);}//*/
+
     // Deduce the displacement increase
     sv(dLambda, dpt, dp);
+    vvPlus(dp, dpBar, dp);
+    //std::cout << posDef << " " << dp[0] << " "<< dp[1] << std::endl;
+
     // Return
     return;
 }
@@ -141,7 +182,7 @@ void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi
 /* Computes the tangent stifness matrix */
 void KTFD(Truss &truss, std::vector<double> &p, std::vector<std::vector<double> > &KT){
     // Step for central finite differenc
-    double dp = 0.001;
+    double dp = 0.0001;
     // Vector of zero forces
     std::vector<double> F(truss.nbDof, 0.0);
     // Stiffness for each direction
