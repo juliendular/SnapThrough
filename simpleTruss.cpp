@@ -121,11 +121,9 @@ double stress(Truss &truss, double x){
     return truss.bars[0].E / 2.0 * x * (x - 2*abs(truss.nodes[3]))/power(truss.bars[0].l0,2);
 }
 
-
-
 /* Calls the general arc-length method */
 void arcLength(Truss &truss, double qef, double phi, double dLambdaInit, int maxIteration,
-    int idealIteration, double epsilon, bool normal,
+    int idealIteration, double epsilon, int normal,
     std::vector<double> &x, std::vector<double> &lambda){
     // Declares one-element vectors
     std::vector<double> qefVec(1, qef);
@@ -242,7 +240,6 @@ void predictorAL(Truss &truss, double x, double lambda, double phi, double Dl,
     // Return
     return;
 }
-
 
 /* Computes the residual force corresponding to the state (x, lambda)
 IN: - x: displacement

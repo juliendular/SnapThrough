@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
 
     // ----- Parameters -----
     // Numerical parameters
-    int resolAna = 1000;
+    int resolAna = 10000;
     double xMin = -0.5;
     double xMax = 2.5;
     double qcr = 2*12049281.52; // Factor 2 because 2*q w.r.t. notations in statement
@@ -95,23 +95,20 @@ int main(int argc, char *argv[]){
         if(writeData(stresses, file2)){return EXIT_FAILURE;}
     }
 
-/*
     // ----- Spherical Arc-Length method -----
-    double qefAL = qef;
-    int maxIteration = 5;
+    double qefAL = 2*qcr;
+    int maxIteration = 6;
     int idealIteration = 4;
-    double epsilonAL = 0.01;
-    double phi = 0.3;
-    double dLambdaInit = 0.07;
+    double epsilonAL = 0.000001;
+    double phi = 0.0/qefAL;
+    double dLambdaInit = 0.4;
     std::vector<double> xAL;
     std::vector<double> lambdaAL;
     arcLength(truss, qefAL, phi, dLambdaInit, maxIteration, idealIteration,
-        epsilonAL, false, xAL, lambdaAL);
-
-    //arcLength(truss, 3, 0, phi, maxIteration, idealIteration,
-    //    epsilonAL, false, xAL, lambdaAL);
+        epsilonAL, 0, xAL, lambdaAL);
     // Writes the results in a .txt file
     if(writeData(xAL, lambdaAL, "AL")){return EXIT_FAILURE;}
+
 //*/
 
 /*
@@ -133,7 +130,7 @@ int main(int argc, char *argv[]){
     std::vector<double> lambda3;
     // Arc-Length
     arcLength(truss3, qef3, phi3, dLambdaInit3,
-        maxIteration3, idealIteration3, epsilon3, false, p3, lambda3);
+        maxIteration3, idealIteration3, epsilon3, 0, p3, lambda3);
     // Write results
     if(writeData(p3, lambda3, "AL3")){return EXIT_FAILURE;}
     // Test...

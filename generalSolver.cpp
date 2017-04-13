@@ -39,7 +39,7 @@ double initAL(Truss &truss, std::vector<double> &qef, double dLambda, double eps
 
 /* Implements the multidimensional arc-length method */
 void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambdaInit,
-    int maxIteration, int idealIteration, double epsilon, bool normal,
+    int maxIteration, int idealIteration, double epsilon, int normal,
     std::vector<std::vector<double> > &p, std::vector<double> &lambda){
     // Initialization
     int nbDof = truss.nbDof;
@@ -52,15 +52,25 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
     int it = 1;
     while(lambda[it-1]<1){
         // --- Predictor ---
+        double dLambdap; // For the normal arc-length method
         double dLambda0;
+        std::vector<double> dpp(nbDof); // For the normal arc-length method
         std::vector<double> dp0(nbDof);
-        predictorAL(truss, p[it-1], lambda[it-1], phi, qef, Dl, dp0, dLambda0);
+        predictorAL(truss, p[it-1], lambda[it-1], phi, qef, Dl, dpp, dLambdap);
+        dLambda0 = dLambdap;
+        dp0 = dpp;
         // Initialization of the corrector
         std::vector<double> p0;
         vvPlus(p[it-1], dp0, p0);
         double lambda0 = lambda[it-1] + dLambda0;
         std::vector<double> OOB(nbDof);
         PVW(truss, p0, qef, lambda0, OOB);
+
+        // FOR INFO
+        std::vector<double> testsP(0); testsP.push_back(p0[0]);
+        std::vector<double> testsL(0); testsL.push_back(lambda0);
+
+
         // Estimate the adimensional OOB force
         double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
         // Loop on the corrector until convergence
@@ -82,49 +92,81 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
             mv(KTinv, qef, dpt);
             mv(KTinv, OOB, dpBar);
             sv(-1.0, dpBar, dpBar);
-            // Computes the a's coefficients
-            double a1, a2, a3;
-            std::vector<double> tmp(nbDof);
-            vvPlus(dp0, dpBar, tmp);
-            a1 = vv(dpt, dpt) + power(phi,2) * vv(qef, qef);
-            a2 = 2*vv(dpt, tmp) + 2*dLambda0*power(phi,2)*vv(qef, qef);
-            a3 = vv(tmp, tmp) - power(Dl,2) + power(dLambda0*phi, 2)*vv(qef, qef);
-            // Deduces the possible values for dlambda/dx
-            double rho = power(a2,2) - 4*a1*a3;
-            double dLambda1 = (-a2 + sqrt(rho))/(2*a1);
-            double dLambda2 = (-a2 - sqrt(rho))/(2*a1);
-            std::vector<double> dp1(nbDof); // = dpBar + dlambda1 * dpt;
-            std::vector<double> dp2(nbDof); // = dpBar + dlambda2 * dpt;
-            sv(dLambda1, dpt, tmp);
-            vvPlus(dpBar, tmp, dp1);
-            sv(dLambda2, dpt, tmp);
-            vvPlus(dpBar, tmp, dp2);
-            // Determines the good ones (no need to divide by Dl^2)
-            std::vector<double> dpNext1(nbDof);
-            std::vector<double> dpNext2(nbDof);
-            vvPlus(dp0, dp1, dpNext1);
-            vvPlus(dp0, dp2, dpNext2);
-            double cos1 = vv(dp0,dpNext1) + power(phi,2)*vv(qef,qef)*dLambda0*(dLambda0+dLambda1);
-            double cos2 = vv(dp0,dpNext2) + power(phi,2)*vv(qef,qef)*dLambda0*(dLambda0+dLambda2);
-            if(cos1 > cos2){
-                dLambda0 += dLambda1;
-                dp0 = dpNext1;
+            // Detemines the method
+            if(normal==0){ // Spherical arc-length
+                // Computes the a's coefficients
+                double a1, a2, a3;
+                std::vector<double> tmp(nbDof);
+                vvPlus(dp0, dpBar, tmp);
+                a1 = vv(dpt, dpt) + power(phi,2) * vv(qef, qef);
+                a2 = 2*vv(dpt, tmp) + 2*dLambda0*power(phi,2)*vv(qef, qef);
+                a3 = vv(tmp, tmp) - power(Dl,2) + power(dLambda0*phi, 2)*vv(qef, qef);
+                // Deduces the possible values for dlambda/dx
+                double rho = power(a2,2) - 4*a1*a3;
+                double dLambda1 = (-a2 + sqrt(rho))/(2*a1);
+                double dLambda2 = (-a2 - sqrt(rho))/(2*a1);
+                std::vector<double> dp1(nbDof); // = dpBar + dlambda1 * dpt;
+                std::vector<double> dp2(nbDof); // = dpBar + dlambda2 * dpt;
+                sv(dLambda1, dpt, tmp);
+                vvPlus(dpBar, tmp, dp1);
+                sv(dLambda2, dpt, tmp);
+                vvPlus(dpBar, tmp, dp2);
+                // Determines the good ones (no need to divide by Dl^2)
+                std::vector<double> dpNext1(nbDof);
+                std::vector<double> dpNext2(nbDof);
+                vvPlus(dp0, dp1, dpNext1);
+                vvPlus(dp0, dp2, dpNext2);
+                double cos1 = vv(dp0,dpNext1) + power(phi,2)*vv(qef,qef)*dLambda0*(dLambda0+dLambda1);
+                double cos2 = vv(dp0,dpNext2) + power(phi,2)*vv(qef,qef)*dLambda0*(dLambda0+dLambda2);
+                if(cos1 > cos2){
+                    dLambda0 += dLambda1;
+                    dp0 = dpNext1;
+                }
+                else{
+                    dLambda0 += dLambda2;
+                    dp0 = dpNext2;
+                }
             }
-            else{
-                dLambda0 += dLambda2;
-                dp0 = dpNext2;
+            else if(normal == 1){ // Updated normal arc-length
+                double dLambda1 = - vv(dp0, dpBar) / (vv(dp0,dpt) + dLambda0*power(phi,2)*vv(qef,qef));
+                std::vector<double> dp1(nbDof); // = dpBar + dlambda1 * dpt;
+                sv(dLambda1, dpt, dp1);
+                vvPlus(dpBar, dp1, dp1);
+                // Saving
+                dLambda0 += dLambda1;
+                vvPlus(dp0, dp1, dp0);
+            }
+            else{ // Normal arc-length
+                double dLambda1 = - vv(dpp, dpBar) / (vv(dpp,dpt) + dLambdap*power(phi,2)*vv(qef,qef));
+                std::vector<double> dp1(nbDof); // = dpBar + dlambda1 * dpt;
+                sv(dLambda1, dpt, dp1);
+                vvPlus(dpBar, dp1, dp1);
+                // Saving
+                dLambda0 += dLambda1;
+                vvPlus(dp0, dp1, dp0);
             }
             // Updates force and displacement
             vvPlus(p[it-1], dp0, p0);
             lambda0 = lambda[it-1] + dLambda0;
             PVW(truss, p0, qef, lambda0, OOB);
-            OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));//lambda[it-1]; // can be negative
+            OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
+
+            // FOR INFO
+            testsP.push_back(p0[0]);
+            testsL.push_back(lambda0);
+
         }
+
+        // FOR INFO
+        std::string name = "info" + std::to_string(it);// + "_" + std::to_string(corrIt);
+        writeData(testsP, testsL, name);
+
         if(corrIt == maxIteration){
-            Dl = Dl/4.0;
-            std::cout << "Restart iteration " << it << std::endl;
+            Dl = Dl/2.0;
+            std::cout << "Restart step " << it << std::endl;
         }
         else{
+            std::cout << "End step " << it << " with " << corrIt << " corrector iterations." << std::endl;
             // Update arc-length
             Dl = Dl * sqrt( (double)idealIteration / (double)corrIt );
             // Save displacement and force
@@ -164,17 +206,14 @@ void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi
                  + (power(Dl,2) - vv(dpBar,dpBar)) * (vv(dpt,dpt)+power(phi,2)*vv(qef,qef));
     double deno = vv(dpt,dpt) + power(phi,2)*vv(qef,qef);
     if(posDef){dLambda = (term1 + sqrt(rad)) / deno;}
-    else{dLambda = (term1 - sqrt(rad)) / deno;}//*/
+    else{dLambda = (term1 - sqrt(rad)) / deno;}
     /*
     double rad = vv(dpt, dpt) + power(phi,2) * vv(qef, qef);
     if(posDef){dLambda = Dl/sqrt(rad);}
     else{dLambda = -Dl/sqrt(rad);}//*/
-
     // Deduce the displacement increase
     sv(dLambda, dpt, dp);
     vvPlus(dp, dpBar, dp);
-    //std::cout << posDef << " " << dp[0] << " "<< dp[1] << std::endl;
-
     // Return
     return;
 }

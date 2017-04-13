@@ -1,4 +1,4 @@
-% Load files
+%% Load files
 load('build/results/analytical.txt');
 load('build/results/incremental0.txt');
 load('build/results/incrementalResidual0.txt');

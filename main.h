@@ -46,7 +46,7 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB);
 // genaralSolver.cpp
 void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambdaInit,
-    int maxIteration, int idealIteration, double epsilon, bool normal,
+    int maxIteration, int idealIteration, double epsilon, int normal,
     std::vector<std::vector<double> > &p, std::vector<double> &lambda);
 void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi,
     std::vector<double> &qef, double Dl, std::vector<double> &dp, double &dLambda);
@@ -67,7 +67,7 @@ void arcLength1(Truss &truss, double xMax, double dLambda0, double phi,
     double epsilon, bool normal,
     std::vector<double> &x, std::vector<double> &lambda);
 void arcLength(Truss &truss, double qef, double phi, double dLambdaInit, int maxIteration,
-    int idealIteration, double epsilon, bool normal,
+    int idealIteration, double epsilon, int normal,
     std::vector<double> &x, std::vector<double> &lambda);
 void predictorAL(Truss &truss, double x, double lambda, double phi, double Dl,
     double *dlambda, double *dx);
