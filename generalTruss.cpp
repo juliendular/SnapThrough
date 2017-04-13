@@ -75,7 +75,7 @@ Truss threeBarTruss(){
     double a = 2;
     double b = 1;
     double E1 = 70000000000;
-    double E2 = 70000000000;
+    double E2 = 5000000000;
     double A = 0.01;
     // Fields preparation
     nodes.resize(nbNodes*2);
@@ -183,11 +183,10 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
             OOB[dof] = 0.0;
             // dWInt
             int node = i/2; // integer division
-            // Loop only over the bar that are incident to the node
-            // (the other are not affected by the virtual displacement)
+            // Loop only over the bars that are incident to the node
+            // (the others are not affected by the virtual displacement)
             for(int barNb=0 ; barNb<truss.incidence[node].size() ; barNb++){
                 Bar bar = truss.bars[truss.incidence[node][barNb]];
-                //std::cout << truss.incidence[node][barNb];
                 // a and b determination (with sign)
                 double a,b;
                 int otherNode;
@@ -197,8 +196,6 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
                     otherNode = 1;
                 a = truss.nodes[2*node] - truss.nodes[2*bar.nodes[otherNode]];
                 b = truss.nodes[2*node+1] - truss.nodes[2*bar.nodes[otherNode]+1];
-                //std::cout << ": " << a << " " << b << std::endl;
-
                 // Current length
                 double l2;
                 if(!(i%2)){ // DOF along x-direction
@@ -207,14 +204,12 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
                 else{ // DOF along y-direction
                         l2 = power(a+uC[i-1]-uC[2*bar.nodes[otherNode]],2) + power(b+uC[i]-uC[2*bar.nodes[otherNode]+1],2);
                 }
-                //std::cout << l2 << std::endl;
                 // Green-Lagrange virtual strain
                 double dE11;
                 if(i%2){dE11 = (b+uC[i]-uC[2*bar.nodes[otherNode]+1])/power(bar.l0,2);}
                 else{dE11 = (a+uC[i]-uC[2*bar.nodes[otherNode]])/power(bar.l0,2);}
                 // Piola stress (for the given consitutive law !!!)
                 double S11 = bar.E/2.0 * (l2 - power(bar.l0,2))/power(bar.l0,2);
-                //std::cout << "Strain: " << dE11 << ", Stress: " << S11<< std::endl;
                 // dWInt update
                 OOB[dof] += bar.A * bar.l0 * S11 * dE11;
             }

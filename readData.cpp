@@ -91,4 +91,5 @@ int readData(std::string fileName, Truss &truss, Parameters &parameters){
         }
     }
     */
+    return 0;
 }

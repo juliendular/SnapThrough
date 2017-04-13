@@ -7,9 +7,6 @@
 #include <ctime>
 #include <cstdio>
 
-#define BETA 2.598076211 // important parameter, equal to 9/(2*sqrt(3))
-
-
 struct Bar{
     int nodes[2];
     double A;
@@ -34,6 +31,7 @@ struct Parameters{
 // readData.cpp
 int readData(std::string fileName, Truss &truss, Parameters &parameters);
 // writeData.cpp
+int writeData(std::vector<double> &x, std::string fileName);
 int writeData(std::vector<double> &x, std::vector<double> &y, std::string filename);
 int writeData(std::vector<std::vector<double> > &x, std::vector<double> &y, std::string fileName);
 // generalTruss.cpp
@@ -58,8 +56,12 @@ void analytical(Truss &truss, double xMin, double xMax, int resolution,
     std::vector<double> &x, std::vector<double> &lambda, double qef);
 void incremental(Truss &truss, double qefIncr, int resolution,
     std::vector<double> &x, std::vector<double> &lambda);
-void newtonRaphson(Truss &truss, double qef, int resolution, double epsilon, bool modified,
-    std::vector<double> &x, std::vector<double> &lambda);
+void newtonRaphson(Truss &truss, double q0, double q1, int resolution, double epsilon, bool modified,
+    bool start, std::vector<double> &x, std::vector<double> &lambda);
+void displacement(Truss &truss, int partialResolution, double epsilon,
+    std::vector<double> &controlPoints, std::vector<double> &x,
+    std::vector<double> &load, std::vector<double> &stresses);
+double stress(Truss &truss, double x);
 void arcLength1(Truss &truss, double xMax, double dLambda0, double phi,
     int maxIteration, int idealIteration,
     double epsilon, bool normal,
@@ -69,8 +71,10 @@ void arcLength(Truss &truss, double qef, double phi, double dLambdaInit, int max
     std::vector<double> &x, std::vector<double> &lambda);
 void predictorAL(Truss &truss, double x, double lambda, double phi, double Dl,
     double *dlambda, double *dx);
-
-double KTExact(double x);
+double residual(Truss &truss, double x, double lambda, double qef);
+void residuals(Truss &truss, std::vector<double> &x, std::vector<double> &lambda,
+    double qef, std::vector<double> &res);
+double KTExact(Truss &truss, double x, double qef);
 double KTFD(Truss &truss, double x);
 int invert(double *matrix, double *invMatrix, int n);
 double qcrCalc(Truss &truss);

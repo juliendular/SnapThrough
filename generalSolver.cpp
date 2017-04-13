@@ -182,7 +182,7 @@ void predictorAL(Truss &truss, std::vector<double> &p, double lambda, double phi
 /* Computes the tangent stifness matrix */
 void KTFD(Truss &truss, std::vector<double> &p, std::vector<std::vector<double> > &KT){
     // Step for central finite differenc
-    double dp = 0.0001;
+    double dp = 0.001;
     // Vector of zero forces
     std::vector<double> F(truss.nbDof, 0.0);
     // Stiffness for each direction
