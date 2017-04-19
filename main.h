@@ -22,14 +22,6 @@ struct Truss{
     int nbDof;
 };
 
-struct Parameters{
-    int resolAna;
-    double xMin;
-    double xMax;
-};
-
-// readData.cpp
-int readData(std::string fileName, Truss &truss, Parameters &parameters);
 // writeData.cpp
 int writeData(std::vector<double> &x, std::string fileName);
 int writeData(std::vector<double> &x, std::vector<double> &y, std::string filename);
@@ -43,6 +35,8 @@ double PVW(Truss &truss, double u, double F);
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F, double lambda,
     std::vector<double> &OOB);
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
+    std::vector<double> &OOB);
+void PVW_cauchy(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB);
 // genaralSolver.cpp
 void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambdaInit,

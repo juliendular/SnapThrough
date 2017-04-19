@@ -48,6 +48,11 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
     lambda.push_back(0.0);
     // Initial arc-length
     double Dl = initAL(truss, qef, dLambdaInit, epsilon, phi);
+
+    // FOR INFO
+    int restart = 0;
+
+
     // Loop until lambda = 1
     int it = 1;
     while(lambda[it-1]<1){
@@ -70,12 +75,11 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
         std::vector<double> testsP(0); testsP.push_back(p0[0]);
         std::vector<double> testsL(0); testsL.push_back(lambda0);
 
-
         // Estimate the adimensional OOB force
         double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
         // Loop on the corrector until convergence
         int corrIt;
-        for(corrIt=1 ; corrIt < maxIteration && (OOBeq>epsilon || -OOBeq>epsilon) ; corrIt++){
+        for(corrIt=0 ; corrIt < maxIteration && (OOBeq>epsilon || -OOBeq>epsilon) ; corrIt++){
             // --- Corrector ---
             // Computes the inverse of the tangent stiffness matrix
             std::vector<std::vector<double> > KT(truss.nbDof);
@@ -162,12 +166,14 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
         writeData(testsP, testsL, name);
 
         if(corrIt == maxIteration){
+            restart++;
             Dl = Dl/2.0;
             std::cout << "Restart step " << it << std::endl;
         }
         else{
             std::cout << "End step " << it << " with " << corrIt << " corrector iterations." << std::endl;
             // Update arc-length
+            corrIt = (corrIt > 0) ? corrIt : 1;
             Dl = Dl * sqrt( (double)idealIteration / (double)corrIt );
             // Save displacement and force
             p.push_back(p0);
@@ -175,6 +181,9 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
             it++;
         }
     }
+    std::cout << "RESULT:" << p.size() << " steps and " << restart << " restarted steps." << std::endl;
+
+
 }
 
 /* Computes a predictor for the multidimensional arc-length method */

@@ -75,7 +75,7 @@ Truss threeBarTruss(){
     double a = 2;
     double b = 1;
     double E1 = 70000000000;
-    double E2 = 5000000000;
+    double E2 = 25000000000;
     double A = 0.01;
     // Fields preparation
     nodes.resize(nbNodes*2);
@@ -90,11 +90,11 @@ Truss threeBarTruss(){
     nodes[0] = 0.0; // x component of node 0
     nodes[1] = 0.0; // y component of node 0
     nodes[2] = a;
-    nodes[3] = -b;
+    nodes[3] = -b; // To meet the positive conventions of the schematics
     nodes[4] = 2*a;
     nodes[5] = 0.0;
     nodes[6] = a;
-    nodes[7] = -b - sqrt(a*a+b*b);
+    nodes[7] = -b - sqrt(a*a+b*b); // To meet the positive conventions of the schematics
     // Bars definition
     bars[0] = createBar(0, 1, nodes[0], nodes[1], nodes[2], nodes[3], E1, A);
     bars[1] = createBar(2, 1, nodes[4], nodes[5], nodes[2], nodes[3], E1, A);
@@ -175,7 +175,6 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
             dof++;
         }
     }
-
     // Calculation of dWInt and dWExt
     dof = 0;
     for(int i=0 ; i < truss.nodes.size() ; i++){
@@ -219,4 +218,18 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
             dof++;
         }
     }
+}
+
+void PVW_cauchy(Truss &truss, std::vector<double> &u, std::vector<double> &F,
+    std::vector<double> &OOB){
+    // Intermediate variables
+    double a = truss.nodes[2];
+    double b = -truss.nodes[3];
+    double l0 = sqrt(power(a,2)+power(b,2));
+    double l = sqrt(power(a,2)+power(b-u[0],2)); // length of the oblique bars
+    // OOB forces
+    OOB[0] = truss.bars[2].E*truss.bars[2].A / power(l0,2) * (l0-u[1]+u[0])*(u[0]-u[1])
+            + truss.bars[0].E*truss.bars[0].A / power(l0,2) * 2 * (u[0]-b)*(l-l0) - F[0];
+    OOB[1] = - truss.bars[2].E*truss.bars[2].A / power(l0,2) * (l0-u[1]+u[0])*(u[0]-u[1]) - F[1];
+
 }

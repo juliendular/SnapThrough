@@ -82,13 +82,12 @@ bool posDefinite(std::vector<std::vector<double> > &m){
         return (m[0][0]>0); // Strictly
     }
     else if(m.size()==2){
-        double trace = m[0][0] + m[1][1];
+        //double trace = m[0][0] + m[1][1];
         double det = m[0][0] * m[1][1] - m[0][1] * m[1][0];
-        double eig1 = (trace + sqrt(power(trace,2)-4*det))/2.0;
-        double eig2 = (trace - sqrt(power(trace,2)-4*det))/2.0;
-
-        //return (eig1>0 && eig2>0);
-        return det>0;
+        //double eig1 = (trace + sqrt(power(trace,2)-4*det))/2.0;
+        //double eig2 = (trace - sqrt(power(trace,2)-4*det))/2.0;
+        //return (eig1>0 && eig2>0); // BETTER TO USE THE DETERMINANT (see references [2] and [3])
+        return det>0; //
     }
     else{
         std::cout << "n*n (n>2) positive definitess function not implemented" << std::endl;

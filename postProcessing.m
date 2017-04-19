@@ -142,12 +142,16 @@ ylabel('$q(t)/q_{cr}$ [-]','Interpreter','latex','FontSize',28);
 
 %%
 
-pError = linspace(-0.01,0.01, 100);
+p = linspace(-0.5,2.5, 100);
 
-qLin = E*A*b^3 / (l0^3) .* pError;
-qExact = E*A/(2*l0^3) * pError.*(pError-b).*(pError-2*b);
+qLin = 2*E*A*b^3 / (l0^3) .* p;
+qExact = 2*E*A/(2*l0^3) * p.*(p-b).*(p-2*b);
 
-error = (qLin - qExact)./qExact;
+sinAlpha = b/l0;
+qEps = 2*E*A* (p/l0 - sinAlpha) .* (sqrt(1 - 2*p/l0*sinAlpha + p.^2/l0^2) - 1);
+
+
+%error = (qLin - qExact)./qExact;
 
 figure;
 set(gcf, 'Units', 'centimeters');
@@ -158,10 +162,17 @@ box('on')
 grid on
 hold on
 
-plot(pError, error, 'linewidth', 2);
+plot(p, qExact, 'linewidth', 2);
+plot(p, qEps, 'm','linewidth', 2);
+plot(p(10:25), qLin(10:25), 'r', 'linewidth', 2);
+
 
 xlabel('$p$ [m]','Interpreter','latex','FontSize',28);
-ylabel('Relative error [-]','Interpreter','latex','FontSize',28);
+ylabel('Force [N]','Interpreter','latex','FontSize',28);
+
+leg = legend('$\mathbf{S}=E\mathbf{E}^{GL}$','$\mathbf{\sigma} = E\mathbf{\varepsilon}$', 'Linear solution',...
+    'Location','southeast');
+set(leg,'Interpreter','latex')
 
 
 

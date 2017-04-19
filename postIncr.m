@@ -35,7 +35,7 @@ plot(incremental0(1,:), incremental0(2,:), '-ro', 'LineWidth',2);
 plot(incremental1(1,:), incremental1(2,:), '-mo', 'LineWidth',2);
 plot(incremental2(1,:), incremental2(2,:), '-o', 'LineWidth',2);
 
-leg = legend('Exact relation','5 steps', '10 steps', '20 steps',...
+leg = legend('Exact solution','5 steps', '10 steps', '20 steps',...
     'Location','northeast');
 set(leg,'Interpreter','latex')
 

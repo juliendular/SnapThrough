@@ -20,7 +20,6 @@ int main(int argc, char *argv[]){
     double qef = qcr;
 
     // ----- Analytical solution -----
-    //double qcr = qcrCalc(truss);
     std::vector<double> xAna;
     std::vector<double> lambdaAna;
     // Computes the analytical solution
@@ -97,56 +96,36 @@ int main(int argc, char *argv[]){
 
     // ----- Spherical Arc-Length method -----
     double qefAL = 2*qcr;
-    int maxIteration = 6;
-    int idealIteration = 4;
-    double epsilonAL = 0.000001;
-    double phi = 0.0/qefAL;
-    double dLambdaInit = 0.4;
+    int maxIteration = 3;
+    int idealIteration = 1;
+    double epsilonAL = 0.0000000001;
+    double phi = 0.1/qefAL;
+    double dLambdaInit = 0.1;
     std::vector<double> xAL;
     std::vector<double> lambdaAL;
     arcLength(truss, qefAL, phi, dLambdaInit, maxIteration, idealIteration,
-        epsilonAL, 0, xAL, lambdaAL);
+        epsilonAL, 2, xAL, lambdaAL);
     // Writes the results in a .txt file
     if(writeData(xAL, lambdaAL, "AL")){return EXIT_FAILURE;}
 
-//*/
 
-/*
-    // Three bar truss
-
-    //double qef = 2*12049281;
-
+    // ----- Three bar truss -----
     Truss truss3 = threeBarTruss();
-
     std::vector<double> qef3(truss3.nbDof);
-    qef3[0] = 0;
-    qef3[1] = 1.2*qef;
+    qef3[0] = 0.0;
+    qef3[1] = 2*qef;
     int maxIteration3 = 5;
     int idealIteration3 = 1;
     double epsilon3 = 0.01;
-    double phi3 = 0.0;
-    double dLambdaInit3 = 0.04;
+    double phi3 = 0.0/qef;
+    double dLambdaInit3 = 0.02;
     std::vector<std::vector<double> > p3;
     std::vector<double> lambda3;
     // Arc-Length
     arcLength(truss3, qef3, phi3, dLambdaInit3,
-        maxIteration3, idealIteration3, epsilon3, 0, p3, lambda3);
+        maxIteration3, idealIteration3, epsilon3, 2, p3, lambda3);
     // Write results
     if(writeData(p3, lambda3, "AL3")){return EXIT_FAILURE;}
-    // Test...
-    std::vector<double> u(2);
-    std::vector<double> F(2);
-    std::vector<double> OOB(2,0.0);
-    u[0] = 0.5; u[1] = 0.6;
-    F[0] = 2e8; F[1] = 3e8;
-    PVW(truss3, u, F, OOB);
-
-    std::cout << "OOB force: ";
-    for(int i=0 ; i<OOB.size() ; i++){
-        std::cout << OOB[i] << " ";
-    }
-     std::cout << std::endl;
-//*/
 
     return 0;
 }
