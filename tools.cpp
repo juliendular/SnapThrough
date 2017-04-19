@@ -1,10 +1,6 @@
 #include "main.h"
 
-/* Computes the integer power of a given base
-IN: - base: the number to be raised to power
-    - exponent: integer power (should be positve)
-OUT: the result of base^exponent
-*/
+/* Computes the integer power of a given base */
 double power(double base, int exponent){
     double result = 1.0;
     for(int i=0 ; i<exponent ; i++){
@@ -73,10 +69,10 @@ int inv(std::vector<std::vector<double> > &m, std::vector<std::vector<double> > 
     }
     else{
         std::cout << "n*n (n>2) matrix inversion not implemented" << std::endl;
-        return 1; // TO IMPLEMENT
+        return 1;
     }
 }
-/* Determines if a matrix if positive definite */
+/* Determines if a matrix if positive definite. Actually gives the sign of its determinant */
 bool posDefinite(std::vector<std::vector<double> > &m){
     if(m.size()==1){
         return (m[0][0]>0); // Strictly
@@ -87,10 +83,10 @@ bool posDefinite(std::vector<std::vector<double> > &m){
         //double eig1 = (trace + sqrt(power(trace,2)-4*det))/2.0;
         //double eig2 = (trace - sqrt(power(trace,2)-4*det))/2.0;
         //return (eig1>0 && eig2>0); // BETTER TO USE THE DETERMINANT (see references [2] and [3])
-        return det>0; //
+        return det>0; // The name of the function is not appropriate
     }
     else{
         std::cout << "n*n (n>2) positive definitess function not implemented" << std::endl;
-        return false; // TO IMPLEMENT
+        return false;
     }
 }

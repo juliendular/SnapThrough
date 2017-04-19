@@ -98,7 +98,8 @@ ylabel('$\lambda$ [-]','Interpreter','latex','FontSize',28);
 xlim([-1,2]);
 ylim([-1,1.5]);
 
-%% Finite difference error
+%% Finite difference error (old version of the code)
+%{
 h = logspace(-4, -1, 10);
 
 p = 0.3;
@@ -126,8 +127,7 @@ set(gca,'XScale', 'log', 'YScale', 'log')
 
 %xlim([-1,2]);
 %ylim([-1,1.5]);
-
-
+%}
 
 
 

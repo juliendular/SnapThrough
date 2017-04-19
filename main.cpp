@@ -55,9 +55,9 @@ int main(int argc, char *argv[]){
     if(writeData(xIncrA, lambdaIncrA, "incrementalAbove")){return EXIT_FAILURE;}
 
     // ----- Newton-Raphson method -----
-    double qefNR = 2*qef;
-    std::vector<int> resolutionNR(1);
-    resolutionNR[0]=31; //resolutionNR[1]=11; resolutionNR[2]=21;
+    double qefNR = qef;
+    std::vector<int> resolutionNR(3);
+    resolutionNR[0]=6; resolutionNR[1]=11; resolutionNR[2]=21;
     double epsilonNR = 0.001;
     for(int i=0 ; i<resolutionNR.size() ; i++){
         std::vector<double> xNR(resolutionNR[i]);
@@ -95,10 +95,10 @@ int main(int argc, char *argv[]){
     }
 
     // ----- Spherical Arc-Length method -----
-    double qefAL = 2*qcr;
+    double qefAL = 2.0*qcr;
     int maxIteration = 3;
     int idealIteration = 1;
-    double epsilonAL = 0.0000000001;
+    double epsilonAL = 0.001;
     double phi = 0.1/qefAL;
     double dLambdaInit = 0.1;
     std::vector<double> xAL;
@@ -113,17 +113,17 @@ int main(int argc, char *argv[]){
     Truss truss3 = threeBarTruss();
     std::vector<double> qef3(truss3.nbDof);
     qef3[0] = 0.0;
-    qef3[1] = 2*qef;
+    qef3[1] = 1.1*qef;
     int maxIteration3 = 5;
     int idealIteration3 = 1;
     double epsilon3 = 0.01;
-    double phi3 = 0.0/qef;
+    double phi3 = 0.1/qef;
     double dLambdaInit3 = 0.02;
     std::vector<std::vector<double> > p3;
     std::vector<double> lambda3;
     // Arc-Length
     arcLength(truss3, qef3, phi3, dLambdaInit3,
-        maxIteration3, idealIteration3, epsilon3, 2, p3, lambda3);
+        maxIteration3, idealIteration3, epsilon3, 0, p3, lambda3);
     // Write results
     if(writeData(p3, lambda3, "AL3")){return EXIT_FAILURE;}
 

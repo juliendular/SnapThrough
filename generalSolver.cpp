@@ -23,9 +23,9 @@ double initAL(Truss &truss, std::vector<double> &qef, double dLambda, double eps
     vvPlus(p, dp, p);
     PVW(truss, p, qef, lambda, OOB);
     double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef))/lambda;
-    // Corrector until epsilon precision is reached
+    // Corrects until epsilon precision is reached
     while(OOBeq > epsilon || -OOBeq > epsilon){
-        // Does not compute the new inverse tangent matrix (modified NR)
+        // Does NOT compute the new inverse tangent matrix (modified NR)
         // Corrects the displacement
         mv(KTinv, OOB, dp);
         sv(-1, dp, dp);
@@ -33,7 +33,7 @@ double initAL(Truss &truss, std::vector<double> &qef, double dLambda, double eps
         PVW(truss, p, qef, lambda, OOB);
         OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
     }
-    // Deduce the arc-length
+    // Deduces the arc-length
     return sqrt(vv(p,p) + power(phi*dLambda,2)*vv(qef,qef));
 }
 
@@ -48,11 +48,6 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
     lambda.push_back(0.0);
     // Initial arc-length
     double Dl = initAL(truss, qef, dLambdaInit, epsilon, phi);
-
-    // FOR INFO
-    int restart = 0;
-
-
     // Loop until lambda = 1
     int it = 1;
     while(lambda[it-1]<1){
@@ -70,11 +65,6 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
         double lambda0 = lambda[it-1] + dLambda0;
         std::vector<double> OOB(nbDof);
         PVW(truss, p0, qef, lambda0, OOB);
-
-        // FOR INFO
-        std::vector<double> testsP(0); testsP.push_back(p0[0]);
-        std::vector<double> testsL(0); testsL.push_back(lambda0);
-
         // Estimate the adimensional OOB force
         double OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
         // Loop on the corrector until convergence
@@ -96,7 +86,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
             mv(KTinv, qef, dpt);
             mv(KTinv, OOB, dpBar);
             sv(-1.0, dpBar, dpBar);
-            // Detemines the method
+            // Determines the method
             if(normal==0){ // Spherical arc-length
                 // Computes the a's coefficients
                 double a1, a2, a3;
@@ -154,36 +144,20 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
             lambda0 = lambda[it-1] + dLambda0;
             PVW(truss, p0, qef, lambda0, OOB);
             OOBeq = sqrt(vv(OOB, OOB)/vv(qef,qef));
-
-            // FOR INFO
-            testsP.push_back(p0[0]);
-            testsL.push_back(lambda0);
-
         }
-
-        // FOR INFO
-        std::string name = "info" + std::to_string(it);// + "_" + std::to_string(corrIt);
-        writeData(testsP, testsL, name);
-
-        if(corrIt == maxIteration){
-            restart++;
+        if(corrIt == maxIteration){ // Restart the iteration
             Dl = Dl/2.0;
-            std::cout << "Restart step " << it << std::endl;
         }
-        else{
-            std::cout << "End step " << it << " with " << corrIt << " corrector iterations." << std::endl;
+        else{ // Iteration ok
             // Update arc-length
             corrIt = (corrIt > 0) ? corrIt : 1;
             Dl = Dl * sqrt( (double)idealIteration / (double)corrIt );
             // Save displacement and force
             p.push_back(p0);
             lambda.push_back(lambda0);
-            it++;
+            it++; // Go to the next iteration
         }
     }
-    std::cout << "RESULT:" << p.size() << " steps and " << restart << " restarted steps." << std::endl;
-
-
 }
 
 /* Computes a predictor for the multidimensional arc-length method */

@@ -1,5 +1,6 @@
 #include "main.h"
 
+/* Defines the geometry of the simple truss */
 Truss simpleTruss(){
     Truss truss;
     // Field declaration
@@ -61,6 +62,7 @@ Truss simpleTruss(){
     return truss;
 }
 
+/* Defines the geometry of a three-bar truss */
 Truss threeBarTruss(){
     Truss truss;
     // Field declaration
@@ -75,7 +77,7 @@ Truss threeBarTruss(){
     double a = 2;
     double b = 1;
     double E1 = 70000000000;
-    double E2 = 25000000000;
+    double E2 = 15000000000;
     double A = 0.01;
     // Fields preparation
     nodes.resize(nbNodes*2);
@@ -131,6 +133,7 @@ Truss threeBarTruss(){
     return truss;
 }
 
+/* Creates a bar */
 Bar createBar(int nodeOne, int nodeTwo, double nodeOneX, double nodeOneY,
     double nodeTwoX, double nodeTwoY, double E, double A){
     // Bar declaration
@@ -145,7 +148,7 @@ Bar createBar(int nodeOne, int nodeTwo, double nodeOneX, double nodeOneY,
     return bar;
 }
 
-// For a simple 1 DOF case
+/* Overload to call the general function in a simple 1 DOF case */
 double PVW(Truss &truss, double u, double F){
     std::vector<double> uVec(1,u);
     std::vector<double> FVec(1,F);
@@ -154,6 +157,7 @@ double PVW(Truss &truss, double u, double F){
     return OOBVec[0];
 }
 
+/* Overload to call the general function with qef (F) and lambda */
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F, double lambda,
     std::vector<double> &OOB){
     // Call the usual function
@@ -162,9 +166,10 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F, double la
     PVW(truss, u, realForce, OOB);
 }
 
+/* GENERIC OUT OF BALANCE FORCE CALCULATION, this function works for any truss */
 void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB){
-    // Creates a complete uC vector from u with value 0 if not a DOF
+    // Creates a complete uC vector from u with value 0 if not a DOF (simplifies the following)
     std::vector<double> uC(truss.nodes.size());
     int dof = 0;
     for(int i=0 ; i<truss.nodes.size() ; i++){
@@ -175,51 +180,53 @@ void PVW(Truss &truss, std::vector<double> &u, std::vector<double> &F,
             dof++;
         }
     }
-    // Calculation of dWInt and dWExt
+    // Calculation of FInt and FExt (the virtual displacement is put in evidence and does not appear (OK, it is arbitrary))
     dof = 0;
+    // Loop over the nodal displacement, do something only if the current one is a DOF
     for(int i=0 ; i < truss.nodes.size() ; i++){
-        if(!truss.lockings[i]){
-            OOB[dof] = 0.0;
-            // dWInt
-            int node = i/2; // integer division
+        if(!truss.lockings[i]){ // Is the current displacement a DOF?
+            OOB[dof] = 0.0; // Initialization to 0
+            // FInt
+            int node = i/2; // Integer division to get the node number
             // Loop only over the bars that are incident to the node
             // (the others are not affected by the virtual displacement)
             for(int barNb=0 ; barNb<truss.incidence[node].size() ; barNb++){
+                // Gets the considered bar
                 Bar bar = truss.bars[truss.incidence[node][barNb]];
-                // a and b determination (with sign)
-                double a,b;
+                // Lengths a and b determination (with sign)
+                double a,b; // a is the horizontal length and b the vertical one (with sign conventions...)
                 int otherNode;
-                if(bar.nodes[1] == node)
+                if(bar.nodes[1] == node) // On which side of the bar is the current node? (important for sign conventions)
                     otherNode = 0;
                 else
                     otherNode = 1;
                 a = truss.nodes[2*node] - truss.nodes[2*bar.nodes[otherNode]];
                 b = truss.nodes[2*node+1] - truss.nodes[2*bar.nodes[otherNode]+1];
-                // Current length
+                // Current (deformed) length
                 double l2;
-                if(!(i%2)){ // DOF along x-direction
+                if(!(i%2)) // DOF along x-direction
                         l2 = power(a+uC[i]-uC[2*bar.nodes[otherNode]],2) + power(b+uC[i+1]-uC[2*bar.nodes[otherNode]+1],2);
-                }
-                else{ // DOF along y-direction
+                else // DOF along y-direction
                         l2 = power(a+uC[i-1]-uC[2*bar.nodes[otherNode]],2) + power(b+uC[i]-uC[2*bar.nodes[otherNode]+1],2);
-                }
-                // Green-Lagrange virtual strain
+                // Green-Lagrange virtual strain (analytical derivation similar to what is done in section 1)
                 double dE11;
                 if(i%2){dE11 = (b+uC[i]-uC[2*bar.nodes[otherNode]+1])/power(bar.l0,2);}
                 else{dE11 = (a+uC[i]-uC[2*bar.nodes[otherNode]])/power(bar.l0,2);}
                 // Piola stress (for the given consitutive law !!!)
                 double S11 = bar.E/2.0 * (l2 - power(bar.l0,2))/power(bar.l0,2);
-                // dWInt update
-                OOB[dof] += bar.A * bar.l0 * S11 * dE11;
+                // FInt update
+                OOB[dof] += bar.A * bar.l0 * S11 * dE11; // Integration over the reference configuration
             }
-            // OOB = dWInt - dWExt
-            OOB[dof] -= F[dof];
+            // OOB = FInt - FExt
+            OOB[dof] -= F[dof]; // Reminder: the virtual displacement is put in evidence
             // Increment DOF
             dof++;
+            // All the contributions from the bars adjacent to the considered DOF have been considered, go to the next DOF
         }
     }
 }
 
+/* Specific function for the first considered three-bar truss with another constitutive law (sigma=E epsilon), just used as a comparison */
 void PVW_cauchy(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     std::vector<double> &OOB){
     // Intermediate variables
@@ -227,7 +234,7 @@ void PVW_cauchy(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     double b = -truss.nodes[3];
     double l0 = sqrt(power(a,2)+power(b,2));
     double l = sqrt(power(a,2)+power(b-u[0],2)); // length of the oblique bars
-    // OOB forces
+    // OOB forces (see analytical formula in the report)
     OOB[0] = truss.bars[2].E*truss.bars[2].A / power(l0,2) * (l0-u[1]+u[0])*(u[0]-u[1])
             + truss.bars[0].E*truss.bars[0].A / power(l0,2) * 2 * (u[0]-b)*(l-l0) - F[0];
     OOB[1] = - truss.bars[2].E*truss.bars[2].A / power(l0,2) * (l0-u[1]+u[0])*(u[0]-u[1]) - F[1];

@@ -1,4 +1,4 @@
-% Load files
+%% Load files
 load('build/results/analytical.txt');
 load('build/results/NR0.txt');
 load('build/results/NRResidual0.txt');
@@ -6,20 +6,10 @@ load('build/results/NR1.txt');
 load('build/results/NRResidual1.txt');
 load('build/results/NR2.txt');
 load('build/results/NRResidual2.txt');
-load('build/results/NRiterations1.txt');
-load('build/results/NRiterations2.txt');
-load('build/results/NRiterations3.txt');
-load('build/results/NRiterations4.txt');
-load('build/results/NRiterations11.txt');
 load('build/results/compositeLoading0.txt');
 load('build/results/stresses0.txt');
 load('build/results/compositeLoading1.txt');
 load('build/results/stresses1.txt');
-
-%load('build/results/NRAbove.txt');
-
-
-
 
 %% Parameters
 E = 70000000000;
@@ -43,12 +33,12 @@ box('on')
 grid on
 hold on
 
-plot(analytical(1,:), analytical(2,:)/2, 'k', 'linewidth', 1.5);
-%plot(NR0(1,:), NR0(2,:), '-ro', 'LineWidth',2);
-%plot(NR1(1,:), NR1(2,:), '-mo', 'LineWidth',2);
+plot(analytical(1,:), analytical(2,:), 'k', 'linewidth', 1.5);
 plot(NR0(1,:), NR0(2,:), '-ro', 'LineWidth',2);
+plot(NR1(1,:), NR1(2,:), '-mo', 'LineWidth',2);
+%plot(NR2(1,:), NR2(2,:), '-bo', 'LineWidth',2);
 
-leg = legend('Exact solution', '20 steps',...
+leg = legend('Exact solution', '5 steps', '10 steps',...
     'Location','southeast');
 set(leg,'Interpreter','latex')
 
@@ -59,7 +49,14 @@ ylabel('$\lambda$ [-]','Interpreter','latex','FontSize',28);
 %xlim([0,0.5]);
 ylim([-2,2]);
 
-%% Iterations
+%% Iterations (from an old version of the code)
+%{
+load('build/results/NRiterations1.txt');
+load('build/results/NRiterations2.txt');
+load('build/results/NRiterations3.txt');
+load('build/results/NRiterations4.txt');
+load('build/results/NRiterations11.txt');
+
 figure;
 set(gcf, 'Units', 'centimeters');
 set(gcf, 'Position', [0 0 45 10]);
@@ -95,33 +92,7 @@ ylabel('$OOB/q_{cr}$ [-]','Interpreter','latex','FontSize',28);
 %ylim([0,1.2]);
 
 set(gca, 'YScale', 'log')
-
-
-%%
-figure;
-set(gcf, 'Units', 'centimeters');
-set(gcf, 'Position', [0 0 45 25]);
-set(gca, 'fontsize',28);
-set(gca, 'fontname','timesnewroman');
-box('on')
-grid on
-hold on
-
-%plot(analytical(1,:), analytical(2,:)/2, 'k', 'linewidth', 1.5);
-%plot(NR0(1,:), NR0(2,:), '-ro', 'LineWidth',2);
-%plot(NR1(1,:), NR1(2,:), '-mo', 'LineWidth',2);
-plot(NR0(2,:), NR0(1,:), '-ro', 'LineWidth',2);
-
-%leg = legend('Exact solution', '20 steps',...
-%    'Location','southeast');
-%set(leg,'Interpreter','latex')
-
-
-
-xlabel('Time [s]','Interpreter','latex','FontSize',28);
-ylabel('$p$ [m]','Interpreter','latex','FontSize',28);
-%xlim([0,0.5]);
-%ylim([-2,2]);
+%}
 
 %% Composite loading
 time = linspace(0,4,length(compositeLoading0));
@@ -199,7 +170,6 @@ plot(NR2(2,:), error2, '-o', 'LineWidth',2);
 leg = legend('5 steps', '10 steps', '20 steps',...
     'Location','northeast');
 set(leg,'Interpreter','latex')
-
 
 
 xlabel('$\lambda$ [-]','Interpreter','latex','FontSize',28);
