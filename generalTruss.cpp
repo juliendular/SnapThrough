@@ -77,7 +77,7 @@ Truss threeBarTruss(){
     double a = 2;
     double b = 1;
     double E1 = 70000000000;
-    double E2 = 15000000000;
+    double E2 = 70000000000;
     double A = 0.01;
     // Fields preparation
     nodes.resize(nbNodes*2);
@@ -132,6 +132,182 @@ Truss threeBarTruss(){
     // Return
     return truss;
 }
+
+Truss fiveBarTruss(){
+    Truss truss;
+    // Field declaration
+    std::vector<double> nodes;
+    std::vector<Bar> bars;
+    std::vector<std::vector<int> > incidence;
+    std::vector<bool> lockings;
+    // Field declaration
+    int nbNodes = 6;
+    int nbBars = 5;
+    // Parameters
+    double a = 2;
+    double b = 1;
+    double E1 = 100000000000;
+    double A = 0.01;
+    // Fields preparation
+    nodes.resize(nbNodes*2);
+    lockings.resize(nbNodes*2);
+    bars.resize(nbBars);
+    incidence.resize(nbNodes);
+    for(int i = 0 ; i<nbNodes ; i++){
+        std::vector<int> nodeIncidence;
+        incidence[i] = nodeIncidence;
+    }
+    // Nodal positions
+    nodes[0] = 0.0; // x component of node 0
+    nodes[1] = 0.0; // y component of node 0
+    nodes[2] = a;
+    nodes[3] = -b; // To meet the positive conventions of the schematics
+    nodes[4] = 2*a;
+    nodes[5] = 0.0;
+
+    nodes[6] = 0.0; // x component of node 0
+    nodes[7] = 0.0-b; // y component of node 0
+    nodes[8] = a;
+    nodes[9] = -2*b; // To meet the positive conventions of the schematics
+    nodes[10] = 2*a;
+    nodes[11] = 0.0-b;
+    // Bars definition
+    bars[0] = createBar(0, 1, nodes[0], nodes[1], nodes[2], nodes[3], E1, A);
+    bars[1] = createBar(2, 1, nodes[4], nodes[5], nodes[2], nodes[3], E1, A);
+    bars[2] = createBar(1, 4, nodes[2], nodes[3], nodes[8], nodes[9], E1, A);
+    bars[3] = createBar(3, 4, nodes[6], nodes[7], nodes[8], nodes[9], E1, A);
+    bars[4] = createBar(4, 5, nodes[8], nodes[9], nodes[10], nodes[11], E1, A);
+    // Incidence description
+    incidence[0].push_back(0);
+    incidence[1].push_back(0);
+    incidence[1].push_back(1);
+    incidence[1].push_back(2);
+    incidence[2].push_back(1);
+    incidence[3].push_back(3);
+    incidence[4].push_back(2);
+    incidence[4].push_back(3);
+    incidence[4].push_back(4);
+    incidence[5].push_back(4);
+    // Constraints
+    lockings[0] = 1;
+    lockings[1] = 1;
+    lockings[2] = 1;
+    lockings[3] = 0;
+    lockings[4] = 1;
+    lockings[5] = 1;
+    lockings[6] = 1;
+    lockings[7] = 1;
+    lockings[8] = 1;
+    lockings[9] = 0;
+    lockings[10] = 1;
+    lockings[11] = 1;
+    // Number of DOF determination
+    int nbDof = 0;
+    for(int i=0 ; i<lockings.size() ; i++){
+        if(!lockings[i])
+            nbDof++;
+    }
+    // Truss filling
+    truss.nodes = nodes;
+    truss.incidence = incidence;
+    truss.bars = bars;
+    truss.lockings = lockings;
+    truss.nbDof = nbDof;
+    // Return
+    return truss;
+}
+
+Truss sevenBarTruss(){
+    Truss truss;
+    // Field declaration
+    std::vector<double> nodes;
+    std::vector<Bar> bars;
+    std::vector<std::vector<int> > incidence;
+    std::vector<bool> lockings;
+    // Field declaration
+    int nbNodes = 6;
+    int nbBars = 7;
+    // Parameters
+    double a = 2;
+    double b = 1;
+    double E1 = 100000000000;
+    double E2 = 100000000000;
+    double A = 0.01;
+    // Fields preparation
+    nodes.resize(nbNodes*2);
+    lockings.resize(nbNodes*2);
+    bars.resize(nbBars);
+    incidence.resize(nbNodes);
+    for(int i = 0 ; i<nbNodes ; i++){
+        std::vector<int> nodeIncidence;
+        incidence[i] = nodeIncidence;
+    }
+    // Nodal positions
+    nodes[0] = 0.0; // x component of node 0
+    nodes[1] = 0.0; // y component of node 0
+    nodes[2] = a;
+    nodes[3] = -b; // To meet the positive conventions of the schematics
+    nodes[4] = 2*a;
+    nodes[5] = 0.0;
+
+    nodes[6] = 0.0; // x component of node 0
+    nodes[7] = 0.0-b; // y component of node 0
+    nodes[8] = a;
+    nodes[9] = -2*b; // To meet the positive conventions of the schematics
+    nodes[10] = 2*a;
+    nodes[11] = 0.0-b;
+    // Bars definition
+    bars[0] = createBar(0, 1, nodes[0], nodes[1], nodes[2], nodes[3], E1, A);
+    bars[1] = createBar(2, 1, nodes[4], nodes[5], nodes[2], nodes[3], E1, A);
+    bars[2] = createBar(1, 4, nodes[2], nodes[3], nodes[8], nodes[9], E1, A);
+    bars[3] = createBar(3, 4, nodes[6], nodes[7], nodes[8], nodes[9], E1, A);
+    bars[4] = createBar(4, 5, nodes[8], nodes[9], nodes[10], nodes[11], E1, A);
+    bars[5] = createBar(3, 1, nodes[6], nodes[7], nodes[2], nodes[3], E2, A);
+    bars[6] = createBar(5, 1, nodes[10], nodes[11], nodes[2], nodes[3], E2, A);
+    // Incidence description
+    incidence[0].push_back(0);
+    incidence[1].push_back(0);
+    incidence[1].push_back(1);
+    incidence[1].push_back(2);
+    incidence[1].push_back(5);
+    incidence[1].push_back(6);
+    incidence[2].push_back(1);
+    incidence[3].push_back(3);
+    incidence[3].push_back(5);
+    incidence[4].push_back(2);
+    incidence[4].push_back(3);
+    incidence[4].push_back(4);
+    incidence[5].push_back(4);
+    incidence[5].push_back(6);
+    // Constraints
+    lockings[0] = 1;
+    lockings[1] = 1;
+    lockings[2] = 1;
+    lockings[3] = 0;
+    lockings[4] = 1;
+    lockings[5] = 1;
+    lockings[6] = 1;
+    lockings[7] = 1;
+    lockings[8] = 1;
+    lockings[9] = 0;
+    lockings[10] = 1;
+    lockings[11] = 1;
+    // Number of DOF determination
+    int nbDof = 0;
+    for(int i=0 ; i<lockings.size() ; i++){
+        if(!lockings[i])
+            nbDof++;
+    }
+    // Truss filling
+    truss.nodes = nodes;
+    truss.incidence = incidence;
+    truss.bars = bars;
+    truss.lockings = lockings;
+    truss.nbDof = nbDof;
+    // Return
+    return truss;
+}
+
 
 /* Creates a bar */
 Bar createBar(int nodeOne, int nodeTwo, double nodeOneX, double nodeOneY,
@@ -235,8 +411,8 @@ void PVW_cauchy(Truss &truss, std::vector<double> &u, std::vector<double> &F,
     double l0 = sqrt(power(a,2)+power(b,2));
     double l = sqrt(power(a,2)+power(b-u[0],2)); // length of the oblique bars
     // OOB forces (see analytical formula in the report)
-    OOB[0] = truss.bars[2].E*truss.bars[2].A / power(l0,2) * (l0-u[1]+u[0])*(u[0]-u[1])
-            + truss.bars[0].E*truss.bars[0].A / power(l0,2) * 2 * (u[0]-b)*(l-l0) - F[0];
-    OOB[1] = - truss.bars[2].E*truss.bars[2].A / power(l0,2) * (l0-u[1]+u[0])*(u[0]-u[1]) - F[1];
+    OOB[0] = + truss.bars[2].E*truss.bars[2].A / l0 * (u[0]-u[1])
+            + truss.bars[0].E*truss.bars[0].A / (l0 * l) * 2 * (u[0]-b)*(l-l0) - F[0];
+    OOB[1] = - truss.bars[2].E*truss.bars[2].A / l0 * (u[0]-u[1]) - F[1];
 
 }

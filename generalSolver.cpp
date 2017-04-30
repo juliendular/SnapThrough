@@ -50,7 +50,7 @@ void arcLength(Truss &truss, std::vector<double> qef, double phi, double dLambda
     double Dl = initAL(truss, qef, dLambdaInit, epsilon, phi);
     // Loop until lambda = 1
     int it = 1;
-    while(lambda[it-1]<1){
+    while(lambda[it-1]<1 && p[it-1][1] < 2.5){
         // --- Predictor ---
         double dLambdap; // For the normal arc-length method
         double dLambda0;

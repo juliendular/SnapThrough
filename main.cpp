@@ -18,7 +18,7 @@ int main(int argc, char *argv[]){
     double xMax = 2.5;
     double qcr = 2*12049281.52; // Factor 2 because 2*q w.r.t. notations in statement
     double qef = qcr;
-
+/*
     // ----- Analytical solution -----
     std::vector<double> xAna;
     std::vector<double> lambdaAna;
@@ -107,13 +107,12 @@ int main(int argc, char *argv[]){
         epsilonAL, 2, xAL, lambdaAL);
     // Writes the results in a .txt file
     if(writeData(xAL, lambdaAL, "AL")){return EXIT_FAILURE;}
-
-
+*/
     // ----- Three bar truss -----
     Truss truss3 = threeBarTruss();
     std::vector<double> qef3(truss3.nbDof);
     qef3[0] = 0.0;
-    qef3[1] = 1.1*qef;
+    qef3[1] = 2*qef;
     int maxIteration3 = 5;
     int idealIteration3 = 1;
     double epsilon3 = 0.01;
@@ -126,6 +125,45 @@ int main(int argc, char *argv[]){
         maxIteration3, idealIteration3, epsilon3, 0, p3, lambda3);
     // Write results
     if(writeData(p3, lambda3, "AL3")){return EXIT_FAILURE;}
+
+/*
+    // ----- Five/six bar truss -----
+    Truss truss5 = fiveBarTruss();
+    std::vector<double> qef5(truss5.nbDof);
+    qef5[1] = 0.0;
+    qef5[0] = 20*qef;
+    int maxIteration5 = 5;
+    int idealIteration5 = 1;
+    double epsilon5 = 0.01;
+    double phi5 = 0.1/qef;
+    double dLambdaInit5 = 0.02;
+    std::vector<std::vector<double> > p5;
+    std::vector<double> lambda5;
+    // Arc-Length
+    arcLength(truss5, qef5, phi5, dLambdaInit5,
+        maxIteration5, idealIteration5, epsilon5, 0, p5, lambda5);
+    // Write results
+    if(writeData(p5, lambda5, "AL5")){return EXIT_FAILURE;}
+
+    Truss truss7 = sevenBarTruss();
+    std::vector<double> qef7(truss7.nbDof);
+    qef7[1] = 0.0;
+    qef7[0] = 20*qef;
+    int maxIteration7 = 5;
+    int idealIteration7 = 1;
+    double epsilon7 = 0.01;
+    double phi7 = 0.1/qef;
+    double dLambdaInit7 = 0.02;
+    std::vector<std::vector<double> > p7;
+    std::vector<double> lambda7;
+    // Arc-Length
+    arcLength(truss7, qef7, phi7, dLambdaInit7,
+        maxIteration7, idealIteration7, epsilon7, 0, p7, lambda7);
+    // Write results
+    if(writeData(p7, lambda7, "AL7")){return EXIT_FAILURE;}
+
+*/
+
 
     return 0;
 }

@@ -33,7 +33,7 @@ E*A/(2*l0^3) * (2*u*(u-b)*(u-2*b) + (l-l0)*(l+l0)*l) - P
 
 %% For linear approximation
 
-p = linspace(-0.5,2.5, 100);
+p = linspace(-1.5,3.5, 100);
 
 qLin = 2*E*A*b^3 / (l0^3) .* p;
 qExact = 2*E*A/(2*l0^3) * p.*(p-b).*(p-2*b);

@@ -33,6 +33,8 @@ int writeData(std::vector<std::vector<double> > &x, std::vector<double> &y, std:
 // generalTruss.cpp
 Truss simpleTruss();
 Truss threeBarTruss();
+Truss fiveBarTruss();
+Truss sevenBarTruss();
 Bar createBar(int nodeOne, int nodeTwo, double nodeOneX, double nodeOneY,
     double nodeTwoX, double nodeTwoY, double E, double A);
 double PVW(Truss &truss, double u, double F);
